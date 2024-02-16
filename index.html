@@ -1,0 +1,36 @@
+<!doctype html>
+hello world
+
+<script type=module>
+
+  import { Tile } from "./tile.js";
+
+  // const tilejson = await (await fetch("https://d1zqyi8v6vm8p9.cloudfront.net/planet.json")).json();
+
+  const doFetch = async (...request) => {
+    const response = await fetch(...request);
+    if (!response.ok) throw new Error(response.status);
+    return response;
+  };
+
+  /*
+  const json = async (...request) => (await doFetch(...request)).json();
+  const arrayBuffer = async (...request) => (await doFetch(...request)).arrayBuffer();
+  const text = async (...request) => (await doFetch(...request)).text();
+  const blob = async (...request) => (await doFetch(...request)).blob();
+  */
+
+  const fetchTile = async (...request) => {
+    const gunzip = new DecompressionStream("gzip");
+    const gz = await doFetch(...request);
+    const raw = await new Response(gz.body.pipeThrough(gunzip)).arrayBuffer();
+    return new Uint8Array(raw);
+  };
+
+  const tiledata = await fetchTile("tile.gz");
+  console.log('tiledata =', window.tiledata = tiledata);
+
+  const tile = Tile.parseFrom(tiledata);
+  console.log('tile =', window.tile =tile); 
+
+</script>
