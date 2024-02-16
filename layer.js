@@ -12,9 +12,7 @@ export class Layer extends ProtoBuf {
     return this._features.length;
   }
   *[Symbol.iterator]() {
-    for (let i = 0; i < this.length; i++) {
-      yield this.feature(i);
-    }
+    for (const i in this._features) yield this.feature(i);
   }
   feature(i) {
     if (i < 0 || i >= this.length) throw new Error(i);

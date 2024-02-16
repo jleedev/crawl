@@ -2,7 +2,6 @@ export const parseProto = function*(buf) {
   if (!ArrayBuffer.isView(buf) && buf instanceof Uint8Array) throw new TypeError();
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let i = 0;
-  const eof = () => i >= buf.length;
   const varint = () => {
     let val = 0, shift = 0, b;
     do {
@@ -34,7 +33,7 @@ export const parseProto = function*(buf) {
     i += 8;
     return value;
   };
-  while (!eof()) {
+  while (i < buf.length) {
     const tag = varint();
     const field = tag >> 3;
     let value;
@@ -46,14 +45,13 @@ export const parseProto = function*(buf) {
         value = read8();
         break;
       case 2: // LEN
-        const len = varint();
-        value = read(len);
+        value = read(varint());
         break;
-        case 5: // I32
+      case 5: // I32
         value = read4();
         break;
       default:
-        throw new ValueError();
+        throw new ValueError(tag & 0x7);
     }
     yield {field, value};
   }
@@ -65,28 +63,22 @@ export const parsePackedVarint = function*(buf) {
     return;
   }
   let i = 0;
-  const eof = () => i >= buf.length;
   const varint = () => {
     let val = 0, shift = 0, b;
     do {
-      must(1);
+      if (i >= buf.length) throw new RangeError();
       b = buf[i++];
       val |= (b & 0x7f) << shift;
       shift += 7;
     } while (b & 0x80);
     return val;
   };
-  const must = (n) => {
-    if (i + n > buf.length) throw new RangeError();
-  };
-  while (!eof()) {
-    yield varint();
-  }
+  while (i < buf.length) yield varint();
 };
 
 const didTweakNames = new WeakSet();
 
-const tweakNames = protoCls => {
+const tweakNames = (protoCls) => {
   if (!ProtoBuf === Reflect.getPrototypeOf(protoCls)) throw new TypeError();
   if (didTweakNames.has(protoCls)) return;
   didTweakNames.add(protoCls);
@@ -111,8 +103,8 @@ export class ProtoBuf {
   }
   static get Parser() { throw new TypeError("abstract"); }
   static parseFrom(buf) {
-    const obj = new this();
     const parser = new this.Parser();
+    const obj = new this();
     for (const {field, value} of parseProto(buf)) {
       parser[field]?.apply(obj, [value]);
     }
