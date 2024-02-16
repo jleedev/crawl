@@ -1,5 +1,5 @@
 export const parseProto = function*(buf) {
-  if (!ArrayBuffer.isView(buf) && buf instanceof Uint8Array) throw new TypeError();
+  if (!(ArrayBuffer.isView(buf) && buf instanceof Uint8Array)) throw new TypeError();
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let i = 0;
   const varint = () => {
