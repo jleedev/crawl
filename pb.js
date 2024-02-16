@@ -58,7 +58,7 @@ export const parseProto = function*(buf) {
 };
 
 export const parsePackedVarint = function*(buf) {
-  if (!ArrayBuffer.isView(buf) && buf instanceof Uint8Array) {
+  if (!(ArrayBuffer.isView(buf) && buf instanceof Uint8Array)) {
     yield buf;
     return;
   }
