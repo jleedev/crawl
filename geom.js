@@ -1,4 +1,4 @@
-import { zigzagDecode } from "./util.js";
+import { windows, zigzagDecode } from "./util.js";
 
 export const decodeGeometry = function(values) {
   const it = Iterator.from(values);
@@ -7,17 +7,18 @@ export const decodeGeometry = function(values) {
     if (done) throw new Error();
     return value;
   };
+  const nextPoint = () => [zigzagDecode(next()), zigzagDecode(next())];
   const lines = [];
   let line;
   let x = 0, y = 0;
-  const moveTo = (dx, dy) => {
+  const moveTo = ([dx, dy]) => {
     x += dx;
     y += dy;
     if (line) lines.push(line);
     line = [];
     line.push({ x, y });
   };
-  const lineTo = (dx, dy) => {
+  const lineTo = ([dx, dy]) => {
     x += dx;
     y += dy;
     line.push({ x, y });
@@ -31,16 +32,10 @@ export const decodeGeometry = function(values) {
     const command_id = value & 0x7, count = value >> 3;
     switch (command_id) {
       case 1: // MoveTo
-        for (let i = 0; i < count; i++) {
-          const dx = zigzagDecode(next()), dy = zigzagDecode(next());
-          moveTo(dx, dy);
-        }
+        for (let i = 0; i < count; i++) moveTo(nextPoint());
         break;
       case 2: // LineTo
-        for (let i = 0; i < count; i++) {
-          const dx = zigzagDecode(next()), dy = zigzagDecode(next());
-          lineTo(dx, dy);
-        }
+        for (let i = 0; i < count; i++) lineTo(nextPoint());
         break;
     case 7: // ClosePath
       closePath();
@@ -57,7 +52,7 @@ const signedArea = (ring) => windows(ring, 2)
   .map(([p1, p2]) => (p2.x - p1.x) * (p1.y + p2.y))
   .reduce((a, x) => a + x, 0);
 
-const classifyRings = (rings) => {
+export const classifyRings = (rings) => {
   if (rings.length <= 1) return [rings];
   const polygons = [];
   let polygon, ccw;
