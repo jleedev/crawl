@@ -56,7 +56,7 @@ export class Feature extends ProtoBuf {
       type = "Multi" + type;
     }
     return { type, coordinates };
-}
+  }
   static Parser = class {
     [1](id) {
       this.id = id;

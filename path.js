@@ -39,10 +39,12 @@ export const path = () => {
   const handle = (geom) => handler[geom.type](geom);
   return Object.assign(handle, {
     context(value) {
+      if (!arguments.length) return cx;
       cx = value;
       return this;
     },
     pointRadius(value) {
+      if (!arguments.length) return pr;
       pr = value;
       return this;
     },
