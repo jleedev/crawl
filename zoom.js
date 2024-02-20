@@ -1,10 +1,5 @@
 export class ZoomController {
-  constructor({
-    container,
-    duration = 300,
-    count = 3,
-    step = 30,
-  } = {}) {
+  constructor({ container, duration = 300, count = 3, step = 30 } = {}) {
     if (getComputedStyle(container).position !== "relative") {
       console.warn("container should be position: relative");
     }
@@ -15,17 +10,13 @@ export class ZoomController {
     this.step = step;
   }
 
-  static styles = Object.assign(
-    document.createElement("style"),
-    {
-      textContent: `:host {
+  static styles = Object.assign(document.createElement("style"), {
+    textContent: `:host {
         position: absolute;
         pointer-events: none;
         outline: 1px solid;
       }`,
-    }
-  );
-
+  });
 
   isZooming() {
     return this._scope.getAnimations({ subtree: true }).length > 0;
@@ -38,8 +29,8 @@ export class ZoomController {
       (_, i) => i * this.step + t,
     );
     await Promise.all(
-      times.map(
-        t => this._animateOne(from, to, t, this.duration)));
+      times.map((t) => this._animateOne(from, to, t, this.duration)),
+    );
   }
 
   async _animateOne(from, to, startTime, duration) {
@@ -60,4 +51,4 @@ export class ZoomController {
     this._scope.append(box);
     return box;
   }
-};
+}

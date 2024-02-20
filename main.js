@@ -1,6 +1,3 @@
-import { Tile } from "./tile.js";
-import { path as geoPath } from "./path.js";
-
 const doFetch = async (...request) => {
   const response = await fetch(...request);
   if (!response.ok) throw new Error(response.status);
@@ -23,89 +20,38 @@ const fetchTile = async (z, x, y) => {
   return new Uint8Array(await arrayBuffer(url));
 };
 
-const painter = (context) => {
-  const cx = context ?? document.createElement("canvas").getContext("2d");
-  const tileSize = 512;
-  Object.assign(cx.canvas, { width: tileSize, height: tileSize });
-  return {
-    get canvas() {
-      return cx.canvas;
-    },
-    layer(layer, cb) {
-      try {
-        cx.save();
-        const scale = tileSize / layer.extent;
-        const path = geoPath();
-        path.pointRadius(4.5 / scale);
-        cx.scale(scale, scale);
-        cx.lineWidth = layer.extent / cx.canvas.width;
-        for (const feature of layer) {
-          const obj = feature.toGeoJSON();
-          path.context(new Path2D())(obj);
-          try {
-            cx.save();
-            cb(cx, path.context(), obj);
-          } finally {
-            cx.restore();
-          }
-        }
-      } finally {
-        cx.restore();
-      }
-    },
-  };
-};
+import { renderInWorker } from "./render.js";
 
-const paint = painter();
-container.append(paint.canvas);
-
-const render = (tile) => {
-  const cx = paint.canvas.getContext("2d");
-  cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
-  const layers = Object.values(tile.layers);
-  for (const layer of layers) {
-    paint.layer(layer, (cx, path, obj) => {
-      if (
-        !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(obj.type)
-      )
-        return;
-      const hue = Math.random() * 360;
-      cx.fillStyle = `oklch(50% 100% ${hue} / 0.5)`;
-      cx.fill(path);
-    });
-  }
-
-  for (const layer of layers) {
-    paint.layer(layer, (cx, path, obj) => {
-      if (
-        !["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(
-          obj.type,
-        )
-      )
-        return;
-      const hue = Math.random() * 360;
-      cx.strokeStyle = `oklch(50% 100% ${hue} / 0.5)`;
-      cx.lineWidth *= 2;
-      cx.stroke(path);
-    });
-  }
-};
+const canvas = Object.assign(document.createElement("canvas"), {
+  width: 512,
+  height: 512,
+});
+container.append(canvas);
 
 const loadTile = async (z, x, y) => {
   const key = [z, x, y].join();
   if (tilecache.has(key)) {
     return tilecache.get(key);
   } else {
-    const tiledata = await fetchTile(z, x, y);
-    const tile = Tile.parseFrom(tiledata);
-    tilecache.set(key, tile);
-    return tile;
+    tilecache.set(
+      key,
+      (async () => {
+        const tiledata = await fetchTile(z, x, y);
+        const imageBitmap = await renderInWorker(tiledata, 512);
+        return imageBitmap;
+      })(),
+    );
+    return tilecache.get(key);
   }
 };
 
 const redraw = async () => {
+  const current = [z, x, y].join();
   const tile = await loadTile(z, x, y);
-  render(tile);
+  if (current !== [z, x, y].join()) return;
+  const cx = canvas.getContext("2d");
+  cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
+  cx.drawImage(tile, 0, 0);
 };
 
 import { getChildren, getParent, zoomOut } from "./zxy.js";
@@ -117,14 +63,11 @@ redraw();
 import { ZoomController } from "./zoom.js";
 
 // Currently the canvas and the container have the same size
-Object.assign(
-  container.style,
-  {
-    position: "relative",
-    width: "512px",
-    height: "512px",
-  }
-);
+Object.assign(container.style, {
+  position: "relative",
+  width: "512px",
+  height: "512px",
+});
 const zoomController = new ZoomController({ container });
 
 const boxQuad = (key) =>

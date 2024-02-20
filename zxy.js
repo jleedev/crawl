@@ -7,8 +7,9 @@ export const getChildren = ([z, x, y]) => ({
 
 export const getParent = ([z, x, y]) => [z - 1, x >> 1, y >> 1];
 
-export const zoomOut = ([z, x, y]) => Object.entries(
-  getChildren(getParent([z, x, y]))
-).find(([k, v]) => eq([z, x, y], v))[0];
+export const zoomOut = ([z, x, y]) =>
+  Object.entries(getChildren(getParent([z, x, y]))).find(([k, v]) =>
+    eq([z, x, y], v),
+  )[0];
 
 const eq = ([z1, x1, y1], [z2, x2, y2]) => z1 === z2 && x1 === x2 && y1 === y2;
