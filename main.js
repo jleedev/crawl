@@ -57,7 +57,7 @@ const painter = (context) => {
 };
 
 const paint = painter();
-document.body.append(paint.canvas);
+container.append(paint.canvas);
 
 const render = (tile) => {
   const cx = paint.canvas.getContext("2d");
@@ -108,47 +108,56 @@ const redraw = async () => {
   render(tile);
 };
 
+import { getChildren, getParent, zoomOut } from "./zxy.js";
+
 const tilecache = new Map();
 let [z, x, y] = [tilejson.minzoom, 0, 0];
 redraw();
+
+import { ZoomController } from "./zoom.js";
+
+// Currently the canvas and the container have the same size
+Object.assign(
+  container.style,
+  {
+    position: "relative",
+    width: "512px",
+    height: "512px",
+  }
+);
+const zoomController = new ZoomController({ container });
+
+const boxQuad = (key) =>
+  ({
+    y: { inset: "0 50% 50% 0" },
+    u: { inset: "0 0 50% 50%" },
+    b: { inset: "50% 50% 0 0" },
+    n: { inset: "50% 0 0 50%" },
+  })[key];
+
+const boxFull = () => ({ inset: 0 });
 
 addEventListener("keydown", {
   handleEvent(e) {
     switch (e.key) {
       case "y":
-        if (z >= tilejson.maxzoom) break;
-        z += 1;
-        x = x * 2;
-        y = y * 2;
-        redraw();
-        break;
       case "u":
-        if (z >= tilejson.maxzoom) break;
-        z += 1;
-        x = x * 2 + 1;
-        y = y * 2;
-        redraw();
-        break;
-      case "b":
-        if (z >= tilejson.maxzoom) break;
-        z += 1;
-        x = x * 2;
-        y = y * 2 + 1;
-        redraw();
-        break;
       case "n":
+      case "b": {
+        if (zoomController.isZooming()) break;
         if (z >= tilejson.maxzoom) break;
-        z += 1;
-        x = x * 2 + 1;
-        y = y * 2 + 1;
-        redraw();
+        [z, x, y] = getChildren([z, x, y])[e.key];
+        loadTile(z, x, y);
+        zoomController.animate(boxQuad(e.key), boxFull()).then(redraw);
         break;
+      }
       case "<":
+        if (zoomController.isZooming()) break;
         if (z <= tilejson.minzoom) break;
-        z -= 1;
-        x >>= 1;
-        y >>= 1;
-        redraw();
+        const quad = zoomOut([z, x, y]);
+        [z, x, y] = getParent([z, x, y]);
+        loadTile(z, x, y);
+        zoomController.animate(boxFull(), boxQuad(quad)).then(redraw);
         break;
       default:
         return;
