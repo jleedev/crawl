@@ -1,13 +1,14 @@
-export const chunks = function*(it, n = 2) {
+export const chunks = function* (it, n = 2) {
   if (!Number.isSafeInteger(n) || n <= 0) throw new TypeError(n);
   it = Iterator.from(it);
   while (true) {
     const a = it.take(n).toArray();
-    if (a.length == n) yield a; else return a;
+    if (a.length == n) yield a;
+    else return a;
   }
 };
 
-export const windows = function*(it, n = 2) {
+export const windows = function* (it, n = 2) {
   if (!Number.isSafeInteger(n) || n <= 0) throw new TypeError(n);
   it = Iterator.from(it);
   let a = it.take(n).toArray();
@@ -19,4 +20,4 @@ export const windows = function*(it, n = 2) {
   }
 };
 
-export const zigzagDecode = (n) => (n >> 1) ^ (-(n & 1));
+export const zigzagDecode = (n) => (n >> 1) ^ -(n & 1);

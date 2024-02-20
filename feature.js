@@ -31,7 +31,7 @@ export class Feature extends ProtoBuf {
     return value;
   }
   toGeoJSON() {
-    const pt = ({x, y}) => [x, y];
+    const pt = ({ x, y }) => [x, y];
     let coordinates, type;
     switch (this.type) {
       case GeomType[GeomType.POINT]:
@@ -41,10 +41,12 @@ export class Feature extends ProtoBuf {
         break;
       case GeomType[GeomType.LINESTRING]:
         type = "LineString";
-        coordinates = this.geometry.map(line => line.map(pt));
+        coordinates = this.geometry.map((line) => line.map(pt));
         break;
       case GeomType[GeomType.POLYGON]:
-        coordinates = classifyRings(this.geometry).map(polygon => polygon.map(ring => ring.map(pt)));
+        coordinates = classifyRings(this.geometry).map((polygon) =>
+          polygon.map((ring) => ring.map(pt)),
+        );
         type = "Polygon";
         break;
       default:
@@ -70,5 +72,5 @@ export class Feature extends ProtoBuf {
     [4](geometry) {
       this._geometry.push(parsePackedVarint(geometry));
     }
-  }
+  };
 }

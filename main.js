@@ -1,4 +1,3 @@
-
 import { Tile } from "./tile.js";
 import { path as geoPath } from "./path.js";
 
@@ -9,13 +8,19 @@ const doFetch = async (...request) => {
 };
 
 const json = async (...request) => (await doFetch(...request)).json();
-const arrayBuffer = async (...request) => (await doFetch(...request)).arrayBuffer();
+const arrayBuffer = async (...request) =>
+  (await doFetch(...request)).arrayBuffer();
 
-const tilejson = await json("https://d1zqyi8v6vm8p9.cloudfront.net/planet.json");
+const tilejson = await json(
+  "https://d1zqyi8v6vm8p9.cloudfront.net/planet.json",
+);
 console.log(tilejson);
 
 const fetchTile = async (z, x, y) => {
-  const url = tilejson.tiles[0].replace("{z}", z).replace("{x}", x).replace("{y}", y);
+  const url = tilejson.tiles[0]
+    .replace("{z}", z)
+    .replace("{x}", x)
+    .replace("{y}", y);
   return new Uint8Array(await arrayBuffer(url));
 };
 
@@ -48,7 +53,7 @@ const painter = (context) => {
       } finally {
         cx.restore();
       }
-    }
+    },
   };
 };
 
@@ -61,16 +66,24 @@ const render = (tile) => {
   const layers = Object.values(tile.layers);
   for (const layer of layers) {
     paint.layer(layer, (cx, path, obj) => {
-      if (!["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(obj.type)) return;
+      if (
+        !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(obj.type)
+      )
+        return;
       const hue = Math.random() * 360;
       cx.fillStyle = `oklch(50% 100% ${hue} / 0.5)`;
       cx.fill(path);
     });
   }
-  
+
   for (const layer of layers) {
     paint.layer(layer, (cx, path, obj) => {
-      if (!["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(obj.type)) return;
+      if (
+        !["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(
+          obj.type,
+        )
+      )
+        return;
       const hue = Math.random() * 360;
       cx.strokeStyle = `oklch(50% 100% ${hue} / 0.5)`;
       cx.lineWidth *= 4;
@@ -103,35 +116,35 @@ redraw();
 addEventListener("keydown", {
   handleEvent(e) {
     switch (e.key) {
-      case 'y':
+      case "y":
         if (z >= tilejson.maxzoom) break;
         z += 1;
         x = x * 2;
         y = y * 2;
         redraw();
         break;
-      case 'u':
+      case "u":
         if (z >= tilejson.maxzoom) break;
         z += 1;
         x = x * 2 + 1;
         y = y * 2;
         redraw();
         break;
-      case 'b':
+      case "b":
         if (z >= tilejson.maxzoom) break;
         z += 1;
         x = x * 2;
         y = y * 2 + 1;
         redraw();
         break;
-      case 'n':
+      case "n":
         if (z >= tilejson.maxzoom) break;
         z += 1;
         x = x * 2 + 1;
         y = y * 2 + 1;
         redraw();
         break;
-      case '<':
+      case "<":
         if (z <= tilejson.minzoom) break;
         z -= 1;
         x >>= 1;
@@ -141,5 +154,5 @@ addEventListener("keydown", {
       default:
         return;
     }
-  }
+  },
 });

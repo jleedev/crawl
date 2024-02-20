@@ -1,9 +1,12 @@
-export const parseProto = function*(buf) {
-  if (!(ArrayBuffer.isView(buf) && buf instanceof Uint8Array)) throw new TypeError();
+export const parseProto = function* (buf) {
+  if (!(ArrayBuffer.isView(buf) && buf instanceof Uint8Array))
+    throw new TypeError();
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let i = 0;
   const varint = () => {
-    let val = 0, shift = 0, b;
+    let val = 0,
+      shift = 0,
+      b;
     do {
       must(1);
       b = buf[i++];
@@ -17,7 +20,8 @@ export const parseProto = function*(buf) {
   };
   const read = (n) => {
     must(n);
-    const begin = i, end = i + n;
+    const begin = i,
+      end = i + n;
     i = end;
     return buf.subarray(begin, end);
   };
@@ -53,18 +57,20 @@ export const parseProto = function*(buf) {
       default:
         throw new ValueError(tag & 0x7);
     }
-    yield {field, value};
+    yield { field, value };
   }
 };
 
-export const parsePackedVarint = function*(buf) {
+export const parsePackedVarint = function* (buf) {
   if (!(ArrayBuffer.isView(buf) && buf instanceof Uint8Array)) {
     yield buf;
     return;
   }
   let i = 0;
   const varint = () => {
-    let val = 0, shift = 0, b;
+    let val = 0,
+      shift = 0,
+      b;
     do {
       if (i >= buf.length) throw new RangeError();
       b = buf[i++];
@@ -82,7 +88,7 @@ const tweakNames = (protoCls) => {
   if (!ProtoBuf === Reflect.getPrototypeOf(protoCls)) throw new TypeError();
   if (didTweakNames.has(protoCls)) return;
   didTweakNames.add(protoCls);
-  const name = protoCls.name + '.' + protoCls.Parser.name;
+  const name = protoCls.name + "." + protoCls.Parser.name;
   const pr = protoCls.Parser.prototype;
   for (const k of Reflect.ownKeys(pr)) {
     if (typeof k !== "string" || !isFinite(k)) continue;
@@ -101,11 +107,13 @@ export class ProtoBuf {
       throw new TypeError("abstract");
     }
   }
-  static get Parser() { throw new TypeError("abstract"); }
+  static get Parser() {
+    throw new TypeError("abstract");
+  }
   static parseFrom(buf) {
     const parser = new this.Parser();
     const obj = new this();
-    for (const {field, value} of parseProto(buf)) {
+    for (const { field, value } of parseProto(buf)) {
       parser[field]?.apply(obj, [value]);
     }
     return obj;

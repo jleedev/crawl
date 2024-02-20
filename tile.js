@@ -8,5 +8,5 @@ export class Tile extends ProtoBuf {
       const layer = Layer.parseFrom(layers);
       this.layers[layer.name] = layer;
     }
-  }
+  };
 }

@@ -20,8 +20,8 @@ export class Layer extends ProtoBuf {
     if (feature instanceof Feature) return feature;
     feature = Feature.parseFrom(feature);
     feature.properties = Object.fromEntries(
-      chunks(feature._tags, 2).map(
-        ([k, v]) => [this.keys[k], this.values[v]]));
+      chunks(feature._tags, 2).map(([k, v]) => [this.keys[k], this.values[v]]),
+    );
     this._features[i] = feature;
     return feature;
   }
@@ -44,7 +44,7 @@ export class Layer extends ProtoBuf {
     [5](extent) {
       this.extent = extent;
     }
-  }
+  };
 }
 
 export class Value extends ProtoBuf {
@@ -73,5 +73,5 @@ export class Value extends ProtoBuf {
     [7](bool_value) {
       this.value = Boolean(bool_value);
     }
-  }
+  };
 }
