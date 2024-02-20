@@ -14,7 +14,6 @@ const arrayBuffer = async (...request) =>
 const tilejson = await json(
   "https://d1zqyi8v6vm8p9.cloudfront.net/planet.json",
 );
-console.log(tilejson);
 
 const fetchTile = async (z, x, y) => {
   const url = tilejson.tiles[0]
@@ -86,7 +85,7 @@ const render = (tile) => {
         return;
       const hue = Math.random() * 360;
       cx.strokeStyle = `oklch(50% 100% ${hue} / 0.5)`;
-      cx.lineWidth *= 4;
+      cx.lineWidth *= 2;
       cx.stroke(path);
     });
   }
