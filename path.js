@@ -16,6 +16,7 @@ export const path = () => {
       const { coordinates } = geom;
       if (!coordinates.length) return;
       const [x, y] = coordinates;
+      cx.moveTo(x + pr, y);
       cx.ellipse(x, y, pr, pr, 0, 0, 2 * Math.PI, false);
     },
     MultiPoint(geom) {
