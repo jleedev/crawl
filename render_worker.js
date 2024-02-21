@@ -61,7 +61,9 @@ const render = (paint, tile) => {
     const fillStyle = `oklch(50% 100% ${hue} / 0.5)`;
     paint.layer(layer, (cx, path, obj) => {
       if (
-        !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(obj.type)
+        !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(
+          obj.geometry.type,
+        )
       )
         return;
       cx.fillStyle = fillStyle;
@@ -75,7 +77,7 @@ const render = (paint, tile) => {
     paint.layer(layer, (cx, path, obj) => {
       if (
         !["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(
-          obj.type,
+          obj.geometry.type,
         )
       )
         return;

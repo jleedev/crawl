@@ -57,7 +57,14 @@ export class Feature extends ProtoBuf {
     } else {
       type = "Multi" + type;
     }
-    return { type, coordinates };
+    const geometry = { type, coordinates };
+    const feature = {
+      type: "Feature",
+      geometry,
+      properties: this.properties,
+    };
+    if (this.id) feature.id = this.id;
+    return feature;
   }
   static Parser = class {
     [1](id) {
