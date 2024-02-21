@@ -1,3 +1,5 @@
+import "./polyfill.js";
+
 const doFetch = async (...request) => {
   const response = await fetch(...request);
   if (!response.ok) throw new Error(response.status);

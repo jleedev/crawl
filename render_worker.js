@@ -1,3 +1,5 @@
+import "./polyfill.js";
+
 import { Tile } from "./tile.js";
 import { path as geoPath } from "./path.js";
 
