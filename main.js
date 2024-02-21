@@ -77,8 +77,27 @@ const redraw = async () => {
 
 import { getChildren, getParent, zoomOut } from "./zxy.js";
 
+const setHash = () => {
+  const hash = `${z}/${x}/${y}`;
+  const url = Object.assign(new URL(location), { hash });
+  location.replace(url);
+};
+
+const parseHash = () => {
+  const match = /^#(\d+)\/(\d+)\/(\d+)$/.exec(location.hash);
+  return match?.slice(1).map(Number);
+};
+
+addEventListener("hashchange", (e) => {
+  const newTile = parseHash();
+  if (newTile.join() === [z, x, y].join()) return;
+  [z, x, y] = newTile;
+  redraw();
+});
+
 const tilecache = new Map();
-let [z, x, y] = [tilejson.minzoom, 0, 0];
+let [z, x, y] = parseHash() ?? [tilejson.minzoom, 0, 0];
+setHash();
 redraw();
 
 import { ZoomController } from "./zoom.js";
@@ -95,30 +114,30 @@ const boxQuad = (key) =>
 
 const boxFull = () => ({ inset: 0 });
 
-addEventListener("keydown", {
-  handleEvent(e) {
-    switch (e.key) {
-      case "y":
-      case "u":
-      case "n":
-      case "b": {
-        if (zoomController.isZooming()) break;
-        if (z >= tilejson.maxzoom) break;
-        [z, x, y] = getChildren([z, x, y])[e.key];
-        loadTile(z, x, y);
-        zoomController.animate(boxQuad(e.key), boxFull()).then(redraw);
-        break;
-      }
-      case "<":
-        if (zoomController.isZooming()) break;
-        if (z <= tilejson.minzoom) break;
-        const quad = zoomOut([z, x, y]);
-        [z, x, y] = getParent([z, x, y]);
-        loadTile(z, x, y);
-        zoomController.animate(boxFull(), boxQuad(quad)).then(redraw);
-        break;
-      default:
-        return;
+addEventListener("keydown", (e) => {
+  switch (e.key) {
+    case "y":
+    case "u":
+    case "n":
+    case "b": {
+      if (zoomController.isZooming()) break;
+      if (z >= tilejson.maxzoom) break;
+      [z, x, y] = getChildren([z, x, y])[e.key];
+      setHash();
+      loadTile(z, x, y);
+      zoomController.animate(boxQuad(e.key), boxFull()).then(redraw);
+      break;
     }
-  },
+    case "<":
+      if (zoomController.isZooming()) break;
+      if (z <= tilejson.minzoom) break;
+      const quad = zoomOut([z, x, y]);
+      [z, x, y] = getParent([z, x, y]);
+      setHash();
+      loadTile(z, x, y);
+      zoomController.animate(boxFull(), boxQuad(quad)).then(redraw);
+      break;
+    default:
+      return;
+  }
 });

@@ -36,7 +36,7 @@ export class Layer extends ProtoBuf {
       this._features.push(features);
     }
     [3](keys) {
-      this.keys.push(new TextDecoder().decode(keys));
+      this.keys.push(decodeString(keys));
     }
     [4](values) {
       this.values.push(Value.parseFrom(values));

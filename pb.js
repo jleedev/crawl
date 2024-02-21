@@ -85,8 +85,8 @@ export const parsePackedVarint = function* (buf) {
 const didTweakNames = new WeakSet();
 
 const tweakNames = (protoCls) => {
-  if (!ProtoBuf === Reflect.getPrototypeOf(protoCls)) throw new TypeError();
   if (didTweakNames.has(protoCls)) return;
+  if (!ProtoBuf === Reflect.getPrototypeOf(protoCls)) throw new TypeError();
   didTweakNames.add(protoCls);
   const name = protoCls.name + "." + protoCls.Parser.name;
   const pr = protoCls.Parser.prototype;
