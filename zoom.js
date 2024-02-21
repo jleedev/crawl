@@ -10,14 +10,6 @@ export class ZoomController {
     this.step = step;
   }
 
-  static styles = Object.assign(document.createElement("style"), {
-    textContent: `:host {
-        position: absolute;
-        pointer-events: none;
-        outline: 1px solid;
-      }`,
-  });
-
   isZooming() {
     return this._scope.getAnimations({ subtree: true }).length > 0;
   }
@@ -47,8 +39,16 @@ export class ZoomController {
   _makeBox() {
     const box = document.createElement("div");
     const shadow = box.attachShadow({ mode: "open" });
-    shadow.append(this.constructor.styles.cloneNode(true));
+    shadow.adoptedStyleSheets.push(sheet);
     this._scope.append(box);
     return box;
   }
 }
+
+const sheet = new CSSStyleSheet();
+sheet.replaceSync(`
+  :host {
+    position: absolute;
+    pointer-events: none;
+    outline: 1px solid;
+  }`);
