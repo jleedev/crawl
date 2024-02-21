@@ -30,7 +30,7 @@ export class Layer extends ProtoBuf {
       this.version = version;
     }
     [1](name) {
-      this.name = new TextDecoder().decode(name);
+      this.name = decodeString(name);
     }
     [2](features) {
       this._features.push(features);
@@ -47,13 +47,26 @@ export class Layer extends ProtoBuf {
   };
 }
 
+const textDecoder = new TextDecoder();
+
+const decodeString = (buf) => {
+  if (!(ArrayBuffer.isView(buf) && buf instanceof Uint8Array))
+    throw new TypeError();
+  // Check for ascii strings to bypass the magnificently slow TextDecoder
+  if (buf.every((b) => b < 128)) {
+    return String.fromCharCode.apply(null, buf);
+  } else {
+    return textDecoder.decode(buf);
+  }
+};
+
 export class Value extends ProtoBuf {
   static parseFrom(buf) {
     return super.parseFrom(buf).value;
   }
   static Parser = class {
     [1](string_value) {
-      this.value = new TextDecoder().decode(string_value);
+      this.value = decodeString(string_value);
     }
     [2](float_value) {
       [this.value] = new Float32Array(Uint32Array.of(float_value).buffer);
