@@ -1,17 +1,20 @@
 <!doctype html>
-<html style="height:100%;display:grid">
-<title>tile crawl</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-<script type="module" src="./main.js"></script>
-<body style="margin:0;place-self:center;color:black;background:silver">
-<div id="container" style="background:white"></div>
-<dialog>
-  navigate with <kbd>y</kbd> <kbd>u</kbd> <kbd>b</kbd> <kbd>n</kbd> <kbd>&lt;</kbd>
-  <form method=dialog><button>ok</button></form>
-</dialog>
-<script type="module">
-  const dialog = document.querySelector("dialog");
-  dialog.showModal();
-  dialog.addEventListener("keydown", e => e.stopPropagation());
-</script>
+<html style="height: 100%; display: grid">
+  <title>tile crawl</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <script type="module" src="./main.js"></script>
+  <body style="margin: 0; place-self: center; color: black; background: silver">
+    <div id="container" style="background: white"></div>
+    <dialog>
+      navigate with <kbd>y</kbd> <kbd>u</kbd> <kbd>b</kbd> <kbd>n</kbd>
+      <kbd>&lt;</kbd>
+      <form method="dialog"><button>ok</button></form>
+    </dialog>
+    <script type="module">
+      const dialog = document.querySelector("dialog");
+      dialog.showModal();
+      dialog.addEventListener("keydown", (e) => e.stopPropagation());
+    </script>
+  </body>
+</html>
