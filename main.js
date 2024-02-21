@@ -1,5 +1,24 @@
 import "./polyfill.js";
 
+{
+  const sheet = new CSSStyleSheet();
+  // Currently the canvas and the container have the same size
+  sheet.replaceSync(`
+    :root {
+      height: 100%; display: grid;
+    }
+    body {
+      margin: 0; place-self: center; color: black; background: silver;
+    }
+    #container{
+      background: white; position: relative; width: 512px; height: 512px;
+    }
+    canvas {
+      position: absolute;
+    }`);
+  document.adoptedStyleSheets.push(sheet);
+}
+
 const doFetch = async (...request) => {
   const response = await fetch(...request);
   if (!response.ok) throw new Error(response.status);
@@ -64,12 +83,6 @@ redraw();
 
 import { ZoomController } from "./zoom.js";
 
-// Currently the canvas and the container have the same size
-Object.assign(container.style, {
-  position: "relative",
-  width: "512px",
-  height: "512px",
-});
 const zoomController = new ZoomController({ container });
 
 const boxQuad = (key) =>
