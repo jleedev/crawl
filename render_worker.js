@@ -2,6 +2,7 @@ import "./polyfill.js";
 
 import { Tile } from "./tile.js";
 import { path as geoPath } from "./path.js";
+import { cyrb53a } from "./util.js";
 
 onerror = close;
 
@@ -47,23 +48,30 @@ const painter = (context) => {
   };
 };
 
+// Colors are random but fixed on each run
+// And will also change if the worker happens to die :)
+const [seed] = crypto.getRandomValues(new Uint32Array(1));
+
 const render = (paint, tile) => {
   const cx = paint.canvas.getContext("2d");
   cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
   const layers = Object.values(tile.layers);
   for (const layer of layers) {
+    const hue = cyrb53a(layer.name, seed) % 360;
+    const fillStyle = `oklch(50% 100% ${hue} / 0.5)`;
     paint.layer(layer, (cx, path, obj) => {
       if (
         !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(obj.type)
       )
         return;
-      const hue = Math.random() * 360;
-      cx.fillStyle = `oklch(50% 100% ${hue} / 0.5)`;
+      cx.fillStyle = fillStyle;
       cx.fill(path);
     });
   }
 
   for (const layer of layers) {
+    const hue = cyrb53a(layer.name, seed) % 360;
+    const strokeStyle = `oklch(50% 100% ${hue} / 0.5)`;
     paint.layer(layer, (cx, path, obj) => {
       if (
         !["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(
@@ -71,8 +79,7 @@ const render = (paint, tile) => {
         )
       )
         return;
-      const hue = Math.random() * 360;
-      cx.strokeStyle = `oklch(50% 100% ${hue} / 0.5)`;
+      cx.strokeStyle = strokeStyle;
       cx.lineWidth *= 2;
       cx.stroke(path);
     });
