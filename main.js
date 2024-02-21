@@ -1,5 +1,10 @@
 import "./polyfill.js";
 
+import { renderInWorker } from "./render.js";
+import { Tile } from "./tile.js";
+import { ZoomController } from "./zoom.js";
+import { getChildren, getParent, zoomOut } from "./zxy.js";
+
 {
   const sheet = new CSSStyleSheet();
   // Currently the canvas and the container have the same size
@@ -41,8 +46,6 @@ const fetchTile = async (z, x, y) => {
   return new Uint8Array(await arrayBuffer(url));
 };
 
-import { renderInWorker } from "./render.js";
-
 const canvas = Object.assign(document.createElement("canvas"), {
   width: 512,
   height: 512,
@@ -58,8 +61,14 @@ const loadTile = async (z, x, y) => {
       key,
       (async () => {
         const tiledata = await fetchTile(z, x, y);
+        const tile = Object.fromEntries(
+          Object.entries(Tile.parseFrom(tiledata).layers).map(([k, v]) => [
+            k,
+            Array.from(v, (f) => f.toGeoJSON()),
+          ]),
+        );
         const imageBitmap = await renderInWorker(tiledata, 512);
-        return imageBitmap;
+        return { imageBitmap, tile };
       })(),
     );
     return tilecache.get(key);
@@ -72,10 +81,9 @@ const redraw = async () => {
   if (current !== [z, x, y].join()) return;
   const cx = canvas.getContext("2d");
   cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
-  cx.drawImage(tile, 0, 0);
+  cx.drawImage(tile.imageBitmap, 0, 0);
+  window.tile = tile.tile;
 };
-
-import { getChildren, getParent, zoomOut } from "./zxy.js";
 
 const setHash = () => {
   const hash = `${z}/${x}/${y}`;
@@ -99,8 +107,6 @@ const tilecache = new Map();
 let [z, x, y] = parseHash() ?? [tilejson.minzoom, 0, 0];
 setHash();
 redraw();
-
-import { ZoomController } from "./zoom.js";
 
 const zoomController = new ZoomController({ container });
 
