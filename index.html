@@ -1,20 +1,7 @@
 <!doctype html>
 <title>tile crawl</title>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width" />
-<script type="module" src="./main.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+
 <div id="container"></div>
-<dialog>
-  navigate with <kbd>y</kbd> <kbd>u</kbd> <kbd>b</kbd> <kbd>n</kbd>
-  <kbd>&lt;</kbd>
-  <form method="dialog"><button autofocus>ok</button></form>
-</dialog>
-<script type="module">
-  const dialog = document.querySelector("dialog");
-  dialog.addEventListener("keydown", (e) => e.stopPropagation());
-  dialog.addEventListener("focus", (e) =>
-    e.target.querySelector("button")?.focus(),
-  );
-  dialog.addEventListener("close", (e) => e.target.remove());
-  dialog.showModal();
-</script>
+<script type="module" src="./main.js"></script>

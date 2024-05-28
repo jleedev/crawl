@@ -1,5 +1,4 @@
-import "./polyfill.js";
-
+import { html } from "./htl.js";
 import { renderInWorker } from "./render.js";
 import { Tile } from "./tile.js";
 import { ZoomController } from "./zoom.js";
@@ -31,8 +30,7 @@ const doFetch = async (...request) => {
 };
 
 const json = async (...request) => (await doFetch(...request)).json();
-const arrayBuffer = async (...request) =>
-  (await doFetch(...request)).arrayBuffer();
+const buffer = async (...request) => (await doFetch(...request)).arrayBuffer();
 
 const tilejson = await json(
   "https://d1zqyi8v6vm8p9.cloudfront.net/planet.json",
@@ -43,14 +41,47 @@ const fetchTile = async (z, x, y) => {
     .replace("{z}", z)
     .replace("{x}", x)
     .replace("{y}", y);
-  return new Uint8Array(await arrayBuffer(url));
+  return new Uint8Array(await buffer(url));
 };
 
-const canvas = Object.assign(document.createElement("canvas"), {
-  width: 512,
-  height: 512,
-});
+const canvas = /** @type HTMLCanvasElement */ (html`<canvas width=512 height=512>`);
 container.append(canvas);
+
+const tileToJson = (tile) =>
+  Object.fromEntries(
+    Object.entries(tile.layers).map(([k, v]) => [
+      k,
+      Array.from(v, (f) => f.toGeoJSON()),
+    ]),
+  );
+
+// Of course the tilejson should have vector_layers but this is a debugging
+// tool anyway.
+const seenLayers = new Set();
+const layersEnabled = new Set();
+const layersDisabled = new Set();
+
+const noticeNewLayers = (ids) => {
+  for (const id of ids) {
+    if (seenLayers.add(id)) continue;
+    seenLayers.add(id);
+    if (layersDisabled.has(id)) continue;
+    layersEnabled.add(id);
+  }
+};
+
+const editLayers = () => {
+  const options = Array.from(seenLayers, d => [d, !layersDisabled.has(d)]);
+  const contents = html`<ol>${options.map(
+    ([id, state]) => html`<li class=${state ? "enabled" : "disabled"}>${id}`
+  )}`;
+  const dialog = html`<dialog ${{
+    onkeydown(e) { e.stopPropagation(); },
+    onclose() { this.remove(); },
+  }}>${contents}`;
+  document.body.append(dialog);
+  dialog.showModal();
+};
 
 const loadTile = async (z, x, y) => {
   const key = [z, x, y].join();
@@ -61,12 +92,10 @@ const loadTile = async (z, x, y) => {
       key,
       (async () => {
         const tiledata = await fetchTile(z, x, y);
-        const tile = Object.fromEntries(
-          Object.entries(Tile.parseFrom(tiledata).layers).map(([k, v]) => [
-            k,
-            Array.from(v, (f) => f.toGeoJSON()),
-          ]),
-        );
+        // We can't keep this since we're moving the buffer to the worker
+        const tileObj = Tile.parseFrom(tiledata);
+        noticeNewLayers(Object.keys(tileObj.layers));
+        const tile = tileToJson(tileObj);
         const imageBitmap = await renderInWorker(tiledata, 512);
         return { imageBitmap, tile };
       })(),
@@ -103,6 +132,9 @@ addEventListener("hashchange", (e) => {
   redraw();
 });
 
+/**
+ * @type {Map<string, Promise<{imageBitmap: ImageBitmap, tile}>>}
+ */
 const tilecache = new Map();
 let [z, x, y] = parseHash() ?? [tilejson.minzoom, 0, 0];
 setHash();
@@ -110,6 +142,13 @@ redraw();
 
 const zoomController = new ZoomController({ container });
 
+/**
+ * @typedef {"y"|"u"|"b"|"n"} YUBN
+ */
+
+/**
+ * @param {YUBN} key
+ */
 const boxQuad = (key) =>
   ({
     y: { inset: "0 50% 50% 0" },
@@ -120,18 +159,18 @@ const boxQuad = (key) =>
 
 const boxFull = () => ({ inset: 0 });
 
-addEventListener("keydown", (e) => {
-  switch (e.key) {
+addEventListener("keydown", (ev) => {
+  switch (ev.key) {
     case "y":
     case "u":
     case "n":
     case "b": {
       if (zoomController.isZooming()) break;
       if (z >= tilejson.maxzoom) break;
-      [z, x, y] = getChildren([z, x, y])[e.key];
+      [z, x, y] = getChildren([z, x, y])[ev.key];
       setHash();
       loadTile(z, x, y);
-      zoomController.animate(boxQuad(e.key), boxFull()).then(redraw);
+      zoomController.animate(boxQuad(ev.key), boxFull()).then(redraw);
       break;
     }
     case "<":
@@ -143,7 +182,32 @@ addEventListener("keydown", (e) => {
       loadTile(z, x, y);
       zoomController.animate(boxFull(), boxQuad(quad)).then(redraw);
       break;
+    case "l":
+      editLayers();
     default:
       return;
   }
 });
+
+canvas.addEventListener("pointermove", function(ev) {
+  const { width, height } = this.getBoundingClientRect();
+  let xq = 0 <= ev.offsetX ? ev.offsetX <= width / 2 ? 0 : ev.offsetX <= width ? 1 : null : null;
+  let yq = 0 <= ev.offsetY ? ev.offsetY <= height / 2 ? 0 : ev.offsetY <= height ? 1 : null : null;
+  const pointq = (xq === null || yq === null) ? null : [["y", "u"], ["b", "n"]][yq][xq];
+  console.log(pointq);
+});
+
+if (!sessionStorage.getItem("hello")) {
+  sessionStorage.setItem("hello", true);
+  const button = html`<button autofocus>ok</button>`;
+  const dialog = html`<dialog ${{
+    onfocus(e) { button.focus(); },
+    onkeydown(e) { e.stopPropagation(); },
+    onclose() { this.remove(); },
+  }}>
+    navigate with
+    <kbd>y</kbd> <kbd>u</kbd> <kbd>b</kbd> <kbd>n</kbd> <kbd>&lt;</kbd>
+    <form method="dialog">${button}</form>`;
+  document.body.append(dialog);
+  dialog.showModal();
+}

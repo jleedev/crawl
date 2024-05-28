@@ -1,5 +1,3 @@
-import "./polyfill.js";
-
 import { Tile } from "./tile.js";
 import { path as geoPath } from "./path.js";
 import { cyrb53a } from "./util.js";
@@ -58,7 +56,7 @@ const render = (paint, tile) => {
   const layers = Object.values(tile.layers);
   for (const layer of layers) {
     const hue = cyrb53a(layer.name, seed) % 360;
-    const fillStyle = `oklch(50% 100% ${hue} / 0.5)`;
+    const fillStyle = `oklch(50% 100% ${hue} / 0.25)`;
     paint.layer(layer, (cx, path, obj) => {
       if (
         !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(
