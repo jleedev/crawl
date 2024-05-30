@@ -20,15 +20,6 @@ document.adoptedStyleSheets.push(css`
     background: white; position: relative; width: 512px; height: 512px;
   }`);
 
-const doFetch = async (...request) => {
-  const response = await fetch(...request);
-  if (!response.ok) throw new Error(response.status);
-  return response;
-};
-
-const json = async (...request) => (await doFetch(...request)).json();
-const buffer = async (...request) => (await doFetch(...request)).arrayBuffer();
-
 const source = await TileSource.fromTileJSON("https://d1zqyi8v6vm8p9.cloudfront.net/planet.json");
 
 const canvas = /** @type HTMLCanvasElement */ (html`<canvas width=512 height=512>`);
