@@ -20,11 +20,12 @@ export class TileSource {
   static async fromTileJSON(url) {
     return new TileSource(await json(url));
   }
-  async fetchTile(z, x, y) {
+  async fetchTile(z, x, y, signal) {
     const url = this.tilejson.tiles[0]
       .replace("{z}", z)
       .replace("{x}", x)
       .replace("{y}", y);
-    return new Uint8Array(await buffer(url));
+    const request = new Request(url, { signal });
+    return new Uint8Array(await buffer(request));
   }
 }
