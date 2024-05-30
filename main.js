@@ -15,7 +15,12 @@ document.adoptedStyleSheets.push(css`
     margin: 0; place-self: center; color: ButtonText; background: ButtonFace;
   }
   #container{
-    background: white; position: relative; width: 512px; height: 512px;
+    background: white; position: relative;
+  }
+  canvas {
+    display: block;
+    max-width: 100vw;
+    max-height: 100vh;
   }`);
 
 const source = await TileSource.fromTileJSON("https://d1zqyi8v6vm8p9.cloudfront.net/planet.json");
