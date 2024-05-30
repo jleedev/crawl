@@ -9,7 +9,7 @@ import { TileSource } from "./tile_source.js";
 // Currently the canvas and the container have the same size
 document.adoptedStyleSheets.push(css`
   :root {
-    height: 100%; display: grid;
+    height: 100%; display: grid; touch-action: none;
   }
   body {
     margin: 0; place-self: center; color: ButtonText; background: ButtonFace;
@@ -22,6 +22,8 @@ document.adoptedStyleSheets.push(css`
     max-width: 100vw;
     max-height: 100vh;
   }`);
+
+addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
 
 const source = await TileSource.fromTileJSON("https://d1zqyi8v6vm8p9.cloudfront.net/planet.json");
 
