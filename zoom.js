@@ -1,3 +1,5 @@
+import { css } from "./util.js";
+
 export class ZoomController {
   constructor({ container, duration = 300, count = 3, step = 30 } = {}) {
     if (getComputedStyle(container).position !== "relative") {
@@ -45,10 +47,9 @@ export class ZoomController {
   }
 }
 
-const sheet = new CSSStyleSheet();
-sheet.replaceSync(`
+const sheet = css`
   :host {
     position: absolute;
     pointer-events: none;
     outline: 1px solid;
-  }`);
+  }`;

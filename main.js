@@ -17,9 +17,6 @@ document.adoptedStyleSheets.push(css`
   }
   #container{
     background: white; position: relative; width: 512px; height: 512px;
-  }
-  canvas {
-    position: absolute;
   }`);
 
 const doFetch = async (...request) => {
