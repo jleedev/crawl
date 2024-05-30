@@ -4,6 +4,7 @@ import { Tile } from "./tile.js";
 import { ZoomController } from "./zoom.js";
 import { getChildren, getParent, zoomOut } from "./zxy.js";
 import { css } from "./util.js";
+import { TileSource } from "./tile_source.js";
 
 const debug = false;
 
@@ -28,17 +29,7 @@ const doFetch = async (...request) => {
 const json = async (...request) => (await doFetch(...request)).json();
 const buffer = async (...request) => (await doFetch(...request)).arrayBuffer();
 
-const tilejson = await json(
-  "https://d1zqyi8v6vm8p9.cloudfront.net/planet.json",
-);
-
-const fetchTile = async (z, x, y) => {
-  const url = tilejson.tiles[0]
-    .replace("{z}", z)
-    .replace("{x}", x)
-    .replace("{y}", y);
-  return new Uint8Array(await buffer(url));
-};
+const source = await TileSource.fromTileJSON("https://d1zqyi8v6vm8p9.cloudfront.net/planet.json");
 
 const canvas = /** @type HTMLCanvasElement */ (html`<canvas width=512 height=512>`);
 container.append(canvas);
@@ -87,7 +78,7 @@ const loadTile = async (z, x, y) => {
     tilecache.set(
       key,
       (async () => {
-        const tiledata = await fetchTile(z, x, y);
+        const tiledata = await source.fetchTile(z, x, y);
         // We can't keep this since we're moving the buffer to the worker
         const tileObj = Tile.parseFrom(tiledata);
         noticeNewLayers(Object.keys(tileObj.layers));
@@ -132,7 +123,7 @@ addEventListener("hashchange", (e) => {
  * @type {Map<string, Promise<{imageBitmap: ImageBitmap, tile}>>}
  */
 const tilecache = new Map();
-let [z, x, y] = parseHash() ?? [tilejson.minzoom, 0, 0];
+let [z, x, y] = parseHash() ?? [source.minzoom, 0, 0];
 setHash();
 redraw();
 
@@ -162,7 +153,7 @@ addEventListener("keydown", (ev) => {
     case "n":
     case "b": {
       if (zoomController.isZooming()) break;
-      if (z >= tilejson.maxzoom) break;
+      if (z >= source.maxzoom) break;
       [z, x, y] = getChildren([z, x, y])[ev.key];
       setHash();
       loadTile(z, x, y);
@@ -171,7 +162,7 @@ addEventListener("keydown", (ev) => {
     }
     case "<":
       if (zoomController.isZooming()) break;
-      if (z <= tilejson.minzoom) break;
+      if (z <= source.minzoom) break;
       const quad = zoomOut([z, x, y]);
       [z, x, y] = getParent([z, x, y]);
       setHash();
