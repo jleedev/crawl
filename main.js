@@ -14,7 +14,7 @@ document.adoptedStyleSheets.push(css`
   body {
     margin: 0; place-self: center; color: ButtonText; background: ButtonFace;
   }
-  #container{
+  #container {
     background: white; position: relative;
   }
   canvas {
