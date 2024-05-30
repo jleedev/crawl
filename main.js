@@ -6,8 +6,6 @@ import { getChildren, getParent, zoomOut } from "./zxy.js";
 import { css } from "./util.js";
 import { TileSource } from "./tile_source.js";
 
-const debug = false;
-
 // Currently the canvas and the container have the same size
 document.adoptedStyleSheets.push(css`
   :root {

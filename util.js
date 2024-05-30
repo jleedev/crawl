@@ -1,3 +1,5 @@
+import "./polyfill.js";
+
 export const chunks = function () {
   return Iterator.from(
     function* (it, n = 2) {
