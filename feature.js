@@ -1,5 +1,6 @@
 import { ProtoBuf, parsePackedVarint } from "./pb.js";
 import { classifyRings, decodeGeometry } from "./geom.js";
+import { chunks } from "./util.js";
 
 export const GeomType = Object.freeze({
   __proto__: null,
@@ -13,11 +14,29 @@ export const GeomType = Object.freeze({
   [3]: "POLYGON",
 });
 
+function buildProperties(kvs) {
+  return Object.create(null, Object.fromEntries(kvs.map(([key, value]) => [key, { value, writable: true, enumerable: true, configurable: true }])));
+}
+
 export class Feature extends ProtoBuf {
   id = 0;
   type = GeomType[GeomType.UNKNOWN];
   _geometry = [];
   _tags = [];
+  _layer;
+  get properties() {
+    const layer = this._layer.deref();
+    const raw = chunks(this._tags, 2).map(([k, v]) => [layer.keys[k], layer.values[v]]);
+    const value = buildProperties(raw);
+    Reflect.defineProperty(this, "properties", {
+      value,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
+    delete this._tags;
+    return value;
+  }
   get geometry() {
     const raw = Iterator.from(this._geometry).flatMap((x) => x);
     const value = [...decodeGeometry(raw)];
@@ -30,7 +49,7 @@ export class Feature extends ProtoBuf {
     delete this._geometry;
     return value;
   }
-  toGeoJSON() {
+  toGeoJSONGeometry() {
     const pt = ({ x, y }) => [x, y];
     let coordinates, type;
     switch (this.type) {
@@ -50,23 +69,32 @@ export class Feature extends ProtoBuf {
         type = "Polygon";
         break;
       default:
-        throw new TypeError();
+        throw new TypeError(this.type);
     }
     if (coordinates?.length == 1) {
       coordinates = coordinates.flat();
     } else {
       type = "Multi" + type;
     }
-    const geometry = { type, coordinates };
+    return { type, coordinates };
+  }
+  toGeoJSONFeature() {
     const feature = {
       type: "Feature",
-      geometry,
+      geometry: this.toGeoJSONGeometry(),
       properties: this.properties,
     };
     if (this.id) feature.id = this.id;
-    return feature;
+    return feature;  }
+  toGeoJSON() {
+    return this.toGeoJSONFeature();
   }
-  static Parser = class {
+  static Builder = class extends ProtoBuf.Builder {
+    static Target = Feature;
+    id = 0;
+    type = GeomType[GeomType.UNKNOWN];
+    _geometry = [];
+    _tags = [];
     [1](id) {
       this.id = id;
     }

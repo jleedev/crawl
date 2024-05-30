@@ -88,8 +88,8 @@ const tweakNames = (protoCls) => {
   if (didTweakNames.has(protoCls)) return;
   if (!ProtoBuf === Reflect.getPrototypeOf(protoCls)) throw new TypeError();
   didTweakNames.add(protoCls);
-  const name = protoCls.name + "." + protoCls.Parser.name;
-  const pr = protoCls.Parser.prototype;
+  const name = protoCls.name + "." + protoCls.Builder.name;
+  const pr = protoCls.Builder.prototype;
   for (const k of Reflect.ownKeys(pr)) {
     if (typeof k !== "string" || !isFinite(k)) continue;
     const fn = pr[k];
@@ -100,6 +100,21 @@ const tweakNames = (protoCls) => {
   }
 };
 
+const {["ProtoBuf.Builder"]: Builder} = {
+  ["ProtoBuf.Builder"]: class {
+    static get Target() {
+      throw new TypeError("abstract");
+    }
+    addField(field, value) {
+      this[field]?.(value);
+    }
+    build() {
+      const target = new this.constructor.Target();
+      return Object.assign(target, this);
+    }
+  }
+}
+
 export class ProtoBuf {
   constructor() {
     tweakNames(this.constructor);
@@ -107,15 +122,14 @@ export class ProtoBuf {
       throw new TypeError("abstract");
     }
   }
-  static get Parser() {
-    throw new TypeError("abstract");
+  static get Builder() {
+    return Builder;
   }
   static parseFrom(buf) {
-    const parser = new this.Parser();
-    const obj = new this();
+    const builder = new this.Builder();
     for (const { field, value } of parseProto(buf)) {
-      parser[field]?.apply(obj, [value]);
+      builder.addField(field, value);
     }
-    return obj;
+    return builder.build();
   }
 }

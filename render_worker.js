@@ -30,7 +30,7 @@ const painter = (context) => {
         cx.scale(scale, scale);
         cx.lineWidth = layer.extent / cx.canvas.width;
         for (const feature of layer) {
-          const obj = feature.toGeoJSON();
+          const obj = feature.toGeoJSONGeometry();
           path.context(new Path2D())(obj);
           try {
             cx.save();
@@ -60,7 +60,7 @@ const render = (paint, tile) => {
     paint.layer(layer, (cx, path, obj) => {
       if (
         !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(
-          obj.geometry.type,
+          obj.type,
         )
       )
         return;
@@ -75,7 +75,7 @@ const render = (paint, tile) => {
     paint.layer(layer, (cx, path, obj) => {
       if (
         !["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(
-          obj.geometry.type,
+          obj.type,
         )
       )
         return;

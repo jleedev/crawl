@@ -1,6 +1,6 @@
 import { ProtoBuf } from "./pb.js";
 import { Feature } from "./feature.js";
-import { chunks, zigzagDecode } from "./util.js";
+import { zigzagDecode } from "./util.js";
 
 export class Layer extends ProtoBuf {
   keys = [];
@@ -15,18 +15,21 @@ export class Layer extends ProtoBuf {
     for (const i in this._features) yield this.feature(i);
   }
   feature(i) {
-    if (i < 0 || i >= this.length) throw new Error(i);
-    let feature = this._features[i];
-    if (feature instanceof Feature) return feature;
-    feature = Feature.parseFrom(feature);
-    feature.properties = Object.fromEntries(
-      chunks(feature._tags, 2).map(([k, v]) => [this.keys[k], this.values[v]]),
-    );
+    if (i < 0 || i >= this.length) throw new RangeError(i);
+    if (this._features[i] instanceof Feature) return this._features[i];
+    const feature = Feature.parseFrom(this._features[i]);
+    feature._layer = new WeakRef(this);
     this._features[i] = feature;
     return feature;
   }
-  static Parser = class {
-    [15](version) {
+  static Builder = class extends ProtoBuf.Builder {
+    static Target = Layer;
+    keys = [];
+    values = [];
+    _features = [];
+    version = 1;
+    extent = 4096;
+      [15](version) {
       this.version = version;
     }
     [1](name) {
@@ -39,7 +42,7 @@ export class Layer extends ProtoBuf {
       this.keys.push(decodeString(keys));
     }
     [4](values) {
-      this.values.push(Value.parseFrom(values));
+      this.values.push(Value.parseFrom(values).value);
     }
     [5](extent) {
       this.extent = extent;
@@ -54,28 +57,29 @@ const decodeString = (buf) => {
     throw new TypeError();
   // Check for ascii strings to bypass the magnificently slow TextDecoder
   if (buf.every((b) => b < 128)) {
-    return String.fromCharCode.apply(null, buf);
+    return String.fromCharCode(...buf);
   } else {
     return textDecoder.decode(buf);
   }
 };
 
 export class Value extends ProtoBuf {
-  static parseFrom(buf) {
-    return super.parseFrom(buf).value;
-  }
-  static Parser = class {
+  static Builder = class extends ProtoBuf.Builder {
+    static Target = Value;
     [1](string_value) {
       this.value = decodeString(string_value);
     }
     [2](float_value) {
-      [this.value] = new Float32Array(Uint32Array.of(float_value).buffer);
+      const { buffer } = Uint32Array.of(float_value)
+      [this.value] = new Float32Array(buffer);
     }
     [3](double_value) {
-      [this.value] = new Float64Array(BigUint64Array.of(double_value).buffer);
+      const { buffer } = BigUint64Array.of(double_value);
+      [this.value] = new Float64Array(buffer);
     }
     [4](int_value) {
-      [this.value] = new BigInt64Array(BigUint64Array.of(int_value).buffer);
+      const { buffer } = BigUint64Array.of(int_value).buffer;
+      [this.value] = new BigInt64Array(buffer);
     }
     [5](uint_value) {
       this.value = uint_value;

@@ -4,6 +4,8 @@ import { Tile } from "./tile.js";
 import { ZoomController } from "./zoom.js";
 import { getChildren, getParent, zoomOut } from "./zxy.js";
 
+const debug = false;
+
 {
   const sheet = new CSSStyleSheet();
   // Currently the canvas and the container have the same size
@@ -95,7 +97,7 @@ const loadTile = async (z, x, y) => {
         // We can't keep this since we're moving the buffer to the worker
         const tileObj = Tile.parseFrom(tiledata);
         noticeNewLayers(Object.keys(tileObj.layers));
-        const tile = tileToJson(tileObj);
+        const tile = debug && tileToJson(tileObj);
         const imageBitmap = await renderInWorker(tiledata, 512);
         return { imageBitmap, tile };
       })(),
