@@ -3,27 +3,24 @@ import { renderInWorker } from "./render.js";
 import { Tile } from "./tile.js";
 import { ZoomController } from "./zoom.js";
 import { getChildren, getParent, zoomOut } from "./zxy.js";
+import { css } from "./util.js";
 
 const debug = false;
 
-{
-  const sheet = new CSSStyleSheet();
-  // Currently the canvas and the container have the same size
-  sheet.replaceSync(`
-    :root {
-      height: 100%; display: grid;
-    }
-    body {
-      margin: 0; place-self: center; color: black; background: silver;
-    }
-    #container{
-      background: white; position: relative; width: 512px; height: 512px;
-    }
-    canvas {
-      position: absolute;
-    }`);
-  document.adoptedStyleSheets.push(sheet);
-}
+// Currently the canvas and the container have the same size
+document.adoptedStyleSheets.push(css`
+  :root {
+    height: 100%; display: grid;
+  }
+  body {
+    margin: 0; place-self: center; color: ButtonText; background: ButtonFace;
+  }
+  #container{
+    background: white; position: relative; width: 512px; height: 512px;
+  }
+  canvas {
+    position: absolute;
+  }`);
 
 const doFetch = async (...request) => {
   const response = await fetch(...request);

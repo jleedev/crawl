@@ -44,3 +44,10 @@ export const cyrb53a = function (str, seed = 0) {
   h2 ^= h1 >>> 16;
   return 2097152 * (h2 >>> 0) + (h1 >>> 11);
 };
+
+export const css = (...args) => {
+  const text = String.raw(...args);
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(text);
+  return sheet;
+}
