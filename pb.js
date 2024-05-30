@@ -100,21 +100,6 @@ const tweakNames = (protoCls) => {
   }
 };
 
-const {["ProtoBuf.Builder"]: Builder} = {
-  ["ProtoBuf.Builder"]: class {
-    static get Target() {
-      throw new TypeError("abstract");
-    }
-    addField(field, value) {
-      this[field]?.(value);
-    }
-    build() {
-      const target = new this.constructor.Target();
-      return Object.assign(target, this);
-    }
-  }
-}
-
 export class ProtoBuf {
   constructor() {
     tweakNames(this.constructor);
@@ -122,9 +107,20 @@ export class ProtoBuf {
       throw new TypeError("abstract");
     }
   }
-  static get Builder() {
-    return Builder;
-  }
+  static Builder = ({
+    ["ProtoBuf.Builder"]: class {
+      static get Target() {
+        throw new TypeError("abstract");
+      }
+      addField(field, value) {
+        this[field]?.(value);
+      }
+      build() {
+        const target = new this.constructor.Target();
+        return Object.assign(target, this);
+      }
+    }
+  })["ProtoBuf.Builder"];
   static parseFrom(buf) {
     const builder = new this.Builder();
     for (const { field, value } of parseProto(buf)) {
