@@ -1,4 +1,4 @@
-import { windows, zigzagDecode } from "./util.js";
+import { windows, zigzagDecode } from "../util.js";
 
 export const decodeGeometry = function (values) {
   const it = Iterator.from(values);

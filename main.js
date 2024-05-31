@@ -1,6 +1,6 @@
 import { html } from "./htl.js";
 import { renderInWorker } from "./render.js";
-import { Tile } from "./tile.js";
+import { Tile } from "./mvt/tile.js";
 import { ZoomController } from "./zoom.js";
 import { getChildren, getParent, zoomOut } from "./zxy.js";
 import { css } from "./util.js";

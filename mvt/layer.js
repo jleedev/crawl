@@ -1,6 +1,6 @@
 import { ProtoBuf } from "./pb.js";
 import { Feature } from "./feature.js";
-import { zigzagDecode } from "./util.js";
+import { zigzagDecode } from "../util.js";
 
 export class Layer extends ProtoBuf {
   keys = [];

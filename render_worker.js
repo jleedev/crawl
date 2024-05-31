@@ -1,4 +1,4 @@
-import { Tile } from "./tile.js";
+import { Tile } from "./mvt/tile.js";
 import { path as geoPath } from "./path.js";
 import { cyrb53a } from "./util.js";
 

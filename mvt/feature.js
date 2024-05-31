@@ -1,6 +1,6 @@
 import { ProtoBuf, parsePackedVarint } from "./pb.js";
 import { classifyRings, decodeGeometry } from "./geom.js";
-import { chunks } from "./util.js";
+import { chunks } from "../util.js";
 
 export const GeomType = Object.freeze({
   __proto__: null,
