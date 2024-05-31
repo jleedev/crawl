@@ -19,7 +19,7 @@ function buildProperties(kvs) {
 }
 
 export class Feature extends ProtoBuf {
-  id = 0;
+  id;
   type = GeomType[GeomType.UNKNOWN];
   _geometry = [];
   _tags = [];
@@ -84,14 +84,15 @@ export class Feature extends ProtoBuf {
       geometry: this.toGeoJSONGeometry(),
       properties: this.properties,
     };
-    if (this.id) feature.id = this.id;
-    return feature;  }
+    if (this.id !== undefined) feature.id = this.id;
+    return feature;
+  }
   toGeoJSON() {
     return this.toGeoJSONFeature();
   }
   static Builder = class extends ProtoBuf.Builder {
     static Target = Feature;
-    id = 0;
+    id;
     type = GeomType[GeomType.UNKNOWN];
     _geometry = [];
     _tags = [];

@@ -1,6 +1,6 @@
 import { windows, zigzagDecode } from "../util.js";
 
-export const decodeGeometry = function (values) {
+export const decodeGeometry = function* (values) {
   const it = Iterator.from(values);
   const next = () => {
     const { value, done } = it.next();
@@ -8,25 +8,9 @@ export const decodeGeometry = function (values) {
     return value;
   };
   const nextPoint = () => [zigzagDecode(next()), zigzagDecode(next())];
-  const lines = [];
   let line;
   let x = 0,
     y = 0;
-  const moveTo = ([dx, dy]) => {
-    x += dx;
-    y += dy;
-    if (line) lines.push(line);
-    line = [];
-    line.push({ x, y });
-  };
-  const lineTo = ([dx, dy]) => {
-    x += dx;
-    y += dy;
-    line.push({ x, y });
-  };
-  const closePath = () => {
-    if (line) line.push({ x: line[0].x, y: line[0].y });
-  };
   while (true) {
     const { value, done } = it.next();
     if (done) break;
@@ -34,20 +18,34 @@ export const decodeGeometry = function (values) {
       count = value >> 3;
     switch (command_id) {
       case 1: // MoveTo
-        for (let i = 0; i < count; i++) moveTo(nextPoint());
+        for (let i = 0; i < count; i++) {
+          const [dx, dy] = nextPoint();
+          x += dx;
+          y += dy;
+          if (line) yield line;
+          line = [];
+          line.push({ x, y });
+        }
         break;
       case 2: // LineTo
-        for (let i = 0; i < count; i++) lineTo(nextPoint());
+        for (let i = 0; i < count; i++) {
+          const [dx, dy] = nextPoint();
+            x += dx;
+            y += dy;
+            line.push({ x, y });
+          };
         break;
       case 7: // ClosePath
-        closePath();
+        if (line) {
+          const [{ x, y }] = line;
+          line.push({ x, y });
+        }
         break;
       default:
         throw new ValueError(command_id);
     }
   }
-  if (line) lines.push(line);
-  return lines;
+  if (line) yield line;
 };
 
 const signedArea = (ring) =>
