@@ -175,7 +175,18 @@ canvas.addEventListener("pointermove", function(ev) {
   let xq = 0 <= ev.offsetX ? ev.offsetX <= width / 2 ? 0 : ev.offsetX <= width ? 1 : null : null;
   let yq = 0 <= ev.offsetY ? ev.offsetY <= height / 2 ? 0 : ev.offsetY <= height ? 1 : null : null;
   const pointq = (xq === null || yq === null) ? null : [["y", "u"], ["b", "n"]][yq][xq];
-  console.log(pointq);
+  this.dispatchEvent(new GestureEvent("quadmove", { pointq }));
+});
+
+class GestureEvent extends Event {
+  constructor(type, { pointq, ...options} = {}) {
+    super(type, options);
+    this.pointq = pointq;
+  }
+}
+
+canvas.addEventListener("quadmove", function(ev) {
+  console.log(ev.pointq);
 });
 
 if (!sessionStorage.getItem("hello")) {

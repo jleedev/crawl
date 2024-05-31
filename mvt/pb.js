@@ -82,50 +82,21 @@ export const parsePackedVarint = function* (buf) {
   while (i < buf.length) yield varint();
 };
 
-const didTweakNames = new WeakSet();
-
-const tweakNames = (protoCls) => {
-  if (didTweakNames.has(protoCls)) return;
-  if (!ProtoBuf === Reflect.getPrototypeOf(protoCls)) throw new TypeError();
-  didTweakNames.add(protoCls);
-  const name = protoCls.name + "." + protoCls.Builder.name;
-  const pr = protoCls.Builder.prototype;
-  for (const k of Reflect.ownKeys(pr)) {
-    if (typeof k !== "string" || !isFinite(k)) continue;
-    const fn = pr[k];
-    const arg = /\((.*?)\)/.exec(fn.toString())[1];
-    const des = Reflect.getOwnPropertyDescriptor(fn, "name");
-    des.value = `${name}.${arg}[${des.value}]`;
-    Reflect.defineProperty(fn, "name", des);
-  }
-};
-
 export class ProtoBuf {
   constructor() {
-    tweakNames(this.constructor);
-    if (new.target === ProtoBuf) {
+    if (new.target === ProtoBuf) throw new TypeError("abstract");
+  }
+  static Builder = class ProtoBuf_Builder {
+    static get Target() {
       throw new TypeError("abstract");
     }
-  }
-  static Builder = ({
-    ["ProtoBuf.Builder"]: class {
-      static get Target() {
-        throw new TypeError("abstract");
-      }
-      addField(field, value) {
-        this[field]?.(value);
-      }
-      build() {
-        const target = new this.constructor.Target();
-        return Object.assign(target, this);
-      }
+    build() {
+      return Object.assign(new this.constructor.Target(), this);
     }
-  })["ProtoBuf.Builder"];
+  };
   static parseFrom(buf) {
     const builder = new this.Builder();
-    for (const { field, value } of parseProto(buf)) {
-      builder.addField(field, value);
-    }
+    for (const { field, value } of parseProto(buf)) builder[field]?.(value);
     return builder.build();
   }
 }
