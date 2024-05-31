@@ -52,17 +52,17 @@ export class Feature extends ProtoBuf {
   toGeoJSONGeometry() {
     const pt = ({ x, y }) => [x, y];
     let coordinates, type;
-    switch (this.type) {
-      case GeomType[GeomType.POINT]:
+    switch (GeomType[this.type]) {
+      case GeomType.POINT:
         type = "Point";
         const points = this.geometry.flat();
         coordinates = points.map(pt);
         break;
-      case GeomType[GeomType.LINESTRING]:
+      case GeomType.LINESTRING:
         type = "LineString";
         coordinates = this.geometry.map((line) => line.map(pt));
         break;
-      case GeomType[GeomType.POLYGON]:
+      case GeomType.POLYGON:
         coordinates = classifyRings(this.geometry).map((polygon) =>
           polygon.map((ring) => ring.map(pt)),
         );
