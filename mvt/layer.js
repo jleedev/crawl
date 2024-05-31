@@ -29,7 +29,7 @@ export class Layer extends ProtoBuf {
     _features = [];
     version = 1;
     extent = 4096;
-      [15](version) {
+    [15](version) {
       this.version = version;
     }
     [1](name) {
