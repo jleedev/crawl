@@ -30,6 +30,32 @@ const source = await TileSource.fromTileJSON("https://d1zqyi8v6vm8p9.cloudfront.
 const canvas = /** @type HTMLCanvasElement */ (html`<canvas width=512 height=512>`);
 container.append(canvas);
 
+const debugMessage = ((ele = document.createElement("div")) => {
+  const root = ele.attachShadow({ mode: 'open' });
+  root.append(document.createElement("slot"));
+  root.adoptedStyleSheets.push(css`
+    :host {
+      background: rgba(255 255 255 / 0.25);
+      color: black;
+      font-family: monospace;
+      margin: 4px;
+      position: absolute;
+      top: 0;
+      transition: all ease-in-out 300ms;
+      white-space: pre-wrap;
+    }
+    :host(:not(:empty)) {
+      border: 1px solid;
+    }
+    :host(:hover) {
+      background: rgba(255 255 255 / 1);
+      box-shadow: 1px 1px 1px black, 2px 2px 1px black;
+    }
+  `);
+  container.append(ele);
+  return ele;
+})();
+
 const tileToJson = (tile) =>
   Object.fromEntries(
     Object.entries(tile.layers).map(([k, v]) => [
@@ -76,8 +102,8 @@ const doLoadTile = async (quadKey) => {
     noticeNewLayers(Object.keys(tileObj.layers));
     tile = debug && tileToJson(tileObj);
   }
-  const imageBitmap = await renderInWorker(tiledata, 512);
-  return { imageBitmap, tile };
+  const { imageBitmap, duration, byteLength } = await renderInWorker(tiledata, 512);
+  return { imageBitmap, duration, byteLength, tile };
 }
 
 const getTile = async (quadKey) => {
@@ -93,6 +119,13 @@ const redraw = async () => {
   cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
   cx.drawImage(tile.imageBitmap, 0, 0);
   window.tile = tile.tile;
+  if (debug) {
+    debugMessage.textContent = [
+      `${z}/${x}/${y}`,
+      `${+tile.duration.toFixed(1)} ms`,
+      `${tile.byteLength >> 10} KiB`,
+    ].join('\n');
+  }
 };
 
 const setHash = () => {
@@ -114,7 +147,7 @@ addEventListener("hashchange", (e) => {
 });
 
 /**
- * @type {Map<string, Promise<{imageBitmap: ImageBitmap, tile}>>}
+ * @type {Map<string, Promise<{imageBitmap: ImageBitmap, duration: number, tile}>>}
  */
 const tilecache = new Map();
 let [z, x, y] = parseHash() ?? [source.minzoom, 0, 0];
@@ -141,6 +174,7 @@ const boxQuad = (key) =>
 const boxFull = () => ({ inset: 0 });
 
 addEventListener("keydown", (ev) => {
+  if (ev.ctrlKey) return;
   switch (ev.key) {
     case "y":
     case "u":

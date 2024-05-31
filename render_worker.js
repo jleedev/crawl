@@ -10,9 +10,13 @@ const handler = ({ tiledata, tileSize, port }) => {
   const tile = Tile.parseFrom(tiledata);
   const canvas = new OffscreenCanvas(tileSize, tileSize);
   const paint = painter(canvas.getContext("2d"));
+  const start = performance.now();
   render(paint, tile);
+  const end = performance.now();
   const imageBitmap = canvas.transferToImageBitmap();
-  port.postMessage(imageBitmap, { transfer: [imageBitmap] });
+  const duration = end - start;
+  const { byteLength } = tiledata;
+  port.postMessage({ imageBitmap, duration, byteLength }, { transfer: [imageBitmap] });
 };
 
 const painter = (context) => {
