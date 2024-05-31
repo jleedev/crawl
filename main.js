@@ -121,7 +121,8 @@ const redraw = async () => {
   window.tile = tile.tile;
   if (debug) {
     debugMessage.textContent = [
-      current,
+      `quadkey ${current}`,
+      `hilbert ${zxy.toTileID(z, x, y)}`,
       `${z}/${x}/${y}`,
       `${+tile.duration.toFixed(1)} ms`,
       dataSize(tile.byteLength),

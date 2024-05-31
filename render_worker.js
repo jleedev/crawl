@@ -78,7 +78,7 @@ const render = (paint, tile) => {
     const strokeStyle = `oklch(50% 100% ${hue} / 0.5)`;
     paint.layer(layer, (cx, path, obj) => {
       if (
-        !["LineString", "MultiLineString", "Polygon", "MultiPolygon"].includes(
+        !["LineString", "MultiLineString"].includes(
           obj.type,
         )
       )
