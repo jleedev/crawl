@@ -2,7 +2,7 @@ import { html } from "./htl.js";
 import { renderInWorker } from "./render.js";
 import { Tile } from "./mvt/tile.js";
 import { ZoomController } from "./zoom.js";
-import { getChildren, getParent, zoomOut } from "./zxy.js";
+import * as zxy from "./zxy.js";
 import { css } from "./util.js";
 import { TileSource } from "./tile_source.js";
 
@@ -66,31 +66,29 @@ const editLayers = () => {
   dialog.showModal();
 };
 
-const loadTile = async (z, x, y) => {
-  const key = [z, x, y].join();
-  if (tilecache.has(key)) {
-    return tilecache.get(key);
-  } else {
-    tilecache.set(
-      key,
-      (async () => {
-        const tiledata = await source.fetchTile(z, x, y);
-        // We can't keep this since we're moving the buffer to the worker
-        const tileObj = Tile.parseFrom(tiledata);
-        noticeNewLayers(Object.keys(tileObj.layers));
-        const tile = debug && tileToJson(tileObj);
-        const imageBitmap = await renderInWorker(tiledata, 512);
-        return { imageBitmap, tile };
-      })(),
-    );
-    return tilecache.get(key);
+const doLoadTile = async (quadKey) => {
+  const [z, x, y] = zxy.fromQuadKey(quadKey);
+  const tiledata = await source.fetchTile(z, x, y);
+  let tile;
+  {
+    // We can't keep this since we're moving the buffer to the worker
+    const tileObj = Tile.parseFrom(tiledata);
+    noticeNewLayers(Object.keys(tileObj.layers));
+    tile = debug && tileToJson(tileObj);
   }
+  const imageBitmap = await renderInWorker(tiledata, 512);
+  return { imageBitmap, tile };
+}
+
+const getTile = async (quadKey) => {
+  if (!tilecache.has(quadKey)) tilecache.set(quadKey, doLoadTile(quadKey));
+  return tilecache.get(quadKey);
 };
 
 const redraw = async () => {
-  const current = [z, x, y].join();
-  const tile = await loadTile(z, x, y);
-  if (current !== [z, x, y].join()) return;
+  const current = zxy.toQuadKey(z, x, y);
+  const tile = await getTile(current);
+  if (current !== zxy.toQuadKey(z, x, y)) return;
   const cx = canvas.getContext("2d");
   cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
   cx.drawImage(tile.imageBitmap, 0, 0);
@@ -109,9 +107,9 @@ const parseHash = () => {
 };
 
 addEventListener("hashchange", (e) => {
-  const newTile = parseHash();
-  if (newTile.join() === [z, x, y].join()) return;
-  [z, x, y] = newTile;
+  const [newZ, newX, newY] = parseHash();
+  if (zxy.toQuadKey(newZ, newX, newY) === zxy.toQuadKey(z, x, y)) return;
+  [z, x, y] = [newZ, newX, newY];
   redraw();
 });
 
@@ -150,19 +148,19 @@ addEventListener("keydown", (ev) => {
     case "b": {
       if (zoomController.isZooming()) break;
       if (z >= source.maxzoom) break;
-      [z, x, y] = getChildren([z, x, y])[ev.key];
+      [z, x, y] = zxy.getChildren([z, x, y])[ev.key];
       setHash();
-      loadTile(z, x, y);
+      getTile(zxy.toQuadKey(z, x, y));
       zoomController.animate(boxQuad(ev.key), boxFull()).then(redraw);
       break;
     }
     case "<":
       if (zoomController.isZooming()) break;
       if (z <= source.minzoom) break;
-      const quad = zoomOut([z, x, y]);
-      [z, x, y] = getParent([z, x, y]);
+      const quad = zxy.zoomOut([z, x, y]);
+      [z, x, y] = zxy.getParent([z, x, y]);
       setHash();
-      loadTile(z, x, y);
+      getTile(zxy.toQuadKey(z, x, y));
       zoomController.animate(boxFull(), boxQuad(quad)).then(redraw);
       break;
     case "l":
