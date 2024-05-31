@@ -3,7 +3,7 @@ import { renderInWorker } from "./render.js";
 import { Tile } from "./mvt/tile.js";
 import { ZoomController } from "./zoom.js";
 import * as zxy from "./zxy.js";
-import { css } from "./util.js";
+import { css, dataSize } from "./util.js";
 import { TileSource } from "./tile_source.js";
 
 // Currently the canvas and the container have the same size
@@ -35,7 +35,7 @@ const debugMessage = ((ele = document.createElement("div")) => {
   root.append(document.createElement("slot"));
   root.adoptedStyleSheets.push(css`
     :host {
-      background: rgba(255 255 255 / 0.25);
+      background: rgba(255 255 255 / 0.7);
       color: black;
       font-family: monospace;
       margin: 4px;
@@ -121,9 +121,10 @@ const redraw = async () => {
   window.tile = tile.tile;
   if (debug) {
     debugMessage.textContent = [
+      current,
       `${z}/${x}/${y}`,
       `${+tile.duration.toFixed(1)} ms`,
-      `${tile.byteLength >> 10} KiB`,
+      dataSize(tile.byteLength),
     ].join('\n');
   }
 };

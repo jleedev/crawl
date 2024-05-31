@@ -53,3 +53,11 @@ export const css = (...args) => {
   sheet.replaceSync(text);
   return sheet;
 }
+
+export const dataSize = b => {
+  const f = (k) => +(b / k).toFixed(3)
+  if (b < 2**10) return `${b} B`;
+  if (b < 2**20) return `${f(2**10)} KiB`;
+  if (b < 2**30) return `${f(2**20)} MiB`;
+  if (b < 2**40) return `${f(2**30)} GiB`;
+}
