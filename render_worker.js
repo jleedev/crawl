@@ -16,7 +16,10 @@ const handler = ({ tiledata, tileSize, port }) => {
   const imageBitmap = canvas.transferToImageBitmap();
   const duration = end - start;
   const { byteLength } = tiledata;
-  port.postMessage({ imageBitmap, duration, byteLength }, { transfer: [imageBitmap] });
+  port.postMessage(
+    { imageBitmap, duration, byteLength },
+    { transfer: [imageBitmap] },
+  );
 };
 
 const painter = (context) => {
@@ -63,9 +66,7 @@ const render = (paint, tile) => {
     const fillStyle = `oklch(50% 100% ${hue} / 0.25)`;
     paint.layer(layer, (cx, path, obj) => {
       if (
-        !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(
-          obj.type,
-        )
+        !["Point", "MultiPoint", "Polygon", "MultiPolygon"].includes(obj.type)
       )
         return;
       cx.fillStyle = fillStyle;
@@ -77,12 +78,7 @@ const render = (paint, tile) => {
     const hue = cyrb53a(layer.name, seed) % 360;
     const strokeStyle = `oklch(50% 100% ${hue} / 0.5)`;
     paint.layer(layer, (cx, path, obj) => {
-      if (
-        !["LineString", "MultiLineString"].includes(
-          obj.type,
-        )
-      )
-        return;
+      if (!["LineString", "MultiLineString"].includes(obj.type)) return;
       cx.strokeStyle = strokeStyle;
       cx.lineWidth *= 2;
       cx.stroke(path);

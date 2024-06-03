@@ -1,20 +1,24 @@
 // This is not remotely a good polyfill but it handles what I need
 
 globalThis.Iterator ??= (() => {
-  const IteratorPrototype = Reflect.getPrototypeOf(Reflect.getPrototypeOf([].values()));
-  if (IteratorPrototype.constructor !== Object) return IteratorPrototype.constructor;
+  const IteratorPrototype = Reflect.getPrototypeOf(
+    Reflect.getPrototypeOf([].values()),
+  );
+  if (IteratorPrototype.constructor !== Object)
+    return IteratorPrototype.constructor;
   const Iterator = function Iterator() {
-    if (Iterator === new.target) throw new TypeError("Abstract class Iterator not directly constructable");
+    if (Iterator === new.target)
+      throw new TypeError("Abstract class Iterator not directly constructable");
   };
   Iterator.prototype = IteratorPrototype;
   return Iterator;
 })();
 
-Iterator.from ??= function(x) {
+Iterator.from ??= function (x) {
   return x[Symbol.iterator]();
 };
 
-Iterator.prototype.map ??= function*(callbackFn) {
+Iterator.prototype.map ??= function* (callbackFn) {
   let index = 0;
   for (const element of this) {
     yield callbackFn(element, index);
@@ -22,7 +26,7 @@ Iterator.prototype.map ??= function*(callbackFn) {
   }
 };
 
-Iterator.prototype.flatMap ??= function*(callbackFn) {
+Iterator.prototype.flatMap ??= function* (callbackFn) {
   let index = 0;
   for (const element of this) {
     for (const value of callbackFn(element, index)) {
@@ -33,8 +37,9 @@ Iterator.prototype.flatMap ??= function*(callbackFn) {
   }
 };
 
-Iterator.prototype.reduce ??= function(callbackFn, initialValue) {
-  let accumulator = initialValue, currentIndex = 0;
+Iterator.prototype.reduce ??= function (callbackFn, initialValue) {
+  let accumulator = initialValue,
+    currentIndex = 0;
   if (arguments.length < 2) {
     const { value, done } = this.next();
     if (done) throw new TypeError();
@@ -48,7 +53,7 @@ Iterator.prototype.reduce ??= function(callbackFn, initialValue) {
   return accumulator;
 };
 
-Iterator.prototype.take ??= function*(limit) {
+Iterator.prototype.take ??= function* (limit) {
   if (limit < 0) throw new TypeError();
   if (!Number.isInteger(limit) && limit !== Infinity) throw new TypeError();
   if (limit === 0) return;
@@ -59,6 +64,6 @@ Iterator.prototype.take ??= function*(limit) {
   }
 };
 
-Iterator.prototype.toArray ??= function() {
+Iterator.prototype.toArray ??= function () {
   return Array.from(this);
 };

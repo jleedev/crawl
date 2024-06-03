@@ -1,5 +1,9 @@
-
-const tzValues = [0x0, 0x1, 0x5, 0x15, 0x55, 0x155, 0x555, 0x1555, 0x5555, 0x15555, 0x55555, 0x155555, 0x555555, 0x1555555, 0x5555555, 0x15555555, 0x55555555, 0x155555555, 0x555555555, 0x1555555555, 0x5555555555, 0x15555555555, 0x55555555555, 0x155555555555, 0x555555555555, 0x1555555555555, 0x5555555555555];
+const tzValues = [
+  0x0, 0x1, 0x5, 0x15, 0x55, 0x155, 0x555, 0x1555, 0x5555, 0x15555, 0x55555,
+  0x155555, 0x555555, 0x1555555, 0x5555555, 0x15555555, 0x55555555, 0x155555555,
+  0x555555555, 0x1555555555, 0x5555555555, 0x15555555555, 0x55555555555,
+  0x155555555555, 0x555555555555, 0x1555555555555, 0x5555555555555,
+];
 
 export const zxyToTileId = (z, x, y) => {
   if (z > 26) throw new RangeError(`${z} > 26`);
@@ -25,12 +29,11 @@ export const tileIdToZxy = (i) => {
   let acc = 0;
   for (let z = 0; z < 27; z++) {
     const numTiles = (1 << z) * (1 << z);
-    if (acc + numTiles > i)
-      return idOnLevel(z, i - acc);
+    if (acc + numTiles > i) return idOnLevel(z, i - acc);
     acc += numTiles;
   }
   throw new RangeError();
-}
+};
 
 const rotate = (n, xy, rx, ry) => {
   if (ry === 0) {
@@ -40,7 +43,7 @@ const rotate = (n, xy, rx, ry) => {
     }
     [xy[0], xy[1]] = [xy[1], xy[0]];
   }
-}
+};
 
 const idOnLevel = (z, pos) => {
   const n = 2 ** z;
@@ -59,4 +62,9 @@ const idOnLevel = (z, pos) => {
     s *= 2;
   }
   return [z, xy[0], xy[1]];
-}
+};
+
+export default {
+  tileIdToZxy,
+  zxyToTileId,
+};

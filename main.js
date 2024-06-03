@@ -4,36 +4,47 @@ import tilebelt from "@mapbox/tilebelt";
 import { renderInWorker } from "./render.js";
 import { Tile } from "./mvt/tile.js";
 import { ZoomController } from "./zoom.js";
-import * as hilbert from "./hilbert.js";
+import hilbert from "./hilbert.js";
 import { css, dataSize } from "./util.js";
 import { TileSource } from "./tile_source.js";
 
 // Currently the canvas and the container have the same size
 document.adoptedStyleSheets.push(css`
   :root {
-    height: 100%; display: grid; touch-action: none;
+    height: 100%;
+    display: grid;
+    touch-action: none;
   }
   body {
-    margin: 0; place-self: center; color: ButtonText; background: ButtonFace;
+    margin: 0;
+    place-self: center;
+    color: ButtonText;
+    background: ButtonFace;
   }
   #container {
-    background: white; position: relative;
+    background: white;
+    position: relative;
   }
   canvas {
     display: block;
     max-width: 100vw;
     max-height: 100vh;
-  }`);
+  }
+`);
 
 addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
 
-const source = await TileSource.fromTileJSON("https://d1zqyi8v6vm8p9.cloudfront.net/planet.json");
+const source = await TileSource.fromTileJSON(
+  "https://d1zqyi8v6vm8p9.cloudfront.net/planet.json",
+);
 
-const canvas = /** @type HTMLCanvasElement */ (html`<canvas width=512 height=512>`);
+const canvas = /** @type HTMLCanvasElement */ (
+  html`<canvas width="512" height="512"></canvas>`
+);
 container.append(canvas);
 
 const debugMessage = ((ele = document.createElement("div")) => {
-  const root = ele.attachShadow({ mode: 'open' });
+  const root = ele.attachShadow({ mode: "open" });
   root.append(document.createElement("slot"));
   root.adoptedStyleSheets.push(css`
     :host {
@@ -51,7 +62,9 @@ const debugMessage = ((ele = document.createElement("div")) => {
     }
     :host(:hover) {
       background: rgba(255 255 255 / 1);
-      box-shadow: 1px 1px 1px black, 2px 2px 1px black;
+      box-shadow:
+        1px 1px 1px black,
+        2px 2px 1px black;
     }
   `);
   container.append(ele);
@@ -82,14 +95,25 @@ const noticeNewLayers = (ids) => {
 };
 
 const editLayers = () => {
-  const options = Array.from(seenLayers, d => [d, !layersDisabled.has(d)]);
-  const contents = html`<ol>${options.map(
-    ([id, state]) => html`<li class=${state ? "enabled" : "disabled"}>${id}`
-  )}`;
-  const dialog = html`<dialog ${{
-    onkeydown(e) { e.stopPropagation(); },
-    onclose() { this.remove(); },
-  }}>${contents}`;
+  const options = Array.from(seenLayers, (d) => [d, !layersDisabled.has(d)]);
+  const contents = html`<ol>
+    ${options.map(
+      ([id, state]) =>
+        html`<li class=${state ? "enabled" : "disabled"}>${id}</li>`,
+    )}
+  </ol>`;
+  const dialog = html`<dialog
+    ${{
+      onkeydown(e) {
+        e.stopPropagation();
+      },
+      onclose() {
+        this.remove();
+      },
+    }}
+  >
+    ${contents}
+  </dialog>`;
   document.body.append(dialog);
   dialog.showModal();
 };
@@ -104,9 +128,12 @@ const doLoadTile = async (quadKey) => {
     noticeNewLayers(Object.keys(tileObj.layers));
     tile = debug && tileToJson(tileObj);
   }
-  const { imageBitmap, duration, byteLength } = await renderInWorker(tiledata, 512);
+  const { imageBitmap, duration, byteLength } = await renderInWorker(
+    tiledata,
+    512,
+  );
   return { imageBitmap, duration, byteLength, tile };
-}
+};
 
 const getTile = async (quadKey) => {
   if (!tilecache.has(quadKey)) tilecache.set(quadKey, doLoadTile(quadKey));
@@ -128,7 +155,7 @@ const redraw = async () => {
       `${z}/${x}/${y}`,
       `${+tile.duration.toFixed(1)} ms`,
       dataSize(tile.byteLength),
-    ].join('\n');
+    ].join("\n");
   }
 };
 
@@ -145,7 +172,10 @@ const parseHash = () => {
 
 addEventListener("hashchange", (e) => {
   const [newZ, newX, newY] = parseHash();
-  if (tilebelt.tileToQuadkey(newX, newY, newZ) === tilebelt.tileToQuadkey(x, y, z)) return;
+  if (
+    tilebelt.tileToQuadkey(newX, newY, newZ) === tilebelt.tileToQuadkey(x, y, z)
+  )
+    return;
   [z, x, y] = [newZ, newX, newY];
   redraw();
 });
@@ -187,7 +217,9 @@ addEventListener("keydown", (ev) => {
       if (zoomController.isZooming()) break;
       if (z >= source.maxzoom) break;
       // console.log(z,x,y,'->');
-      [x, y, z] = (([y, u, n, b]) => ({ y, u, n, b })[ev.key])(tilebelt.getChildren([x, y, z]));
+      [x, y, z] = (([y, u, n, b]) => ({ y, u, n, b })[ev.key])(
+        tilebelt.getChildren([x, y, z]),
+      );
       // console.log('->',z,x,y);
       setHash();
       getTile(tilebelt.tileToQuadkey([x, y, z]));
@@ -197,7 +229,10 @@ addEventListener("keydown", (ev) => {
     case "<":
       if (zoomController.isZooming()) break;
       if (z <= source.minzoom) break;
-      const quad = [['y', 'u'], ['b', 'n']][y & 1][x & 1];
+      const quad = [
+        ["y", "u"],
+        ["b", "n"],
+      ][y & 1][x & 1];
       [x, y, z] = tilebelt.getParent([x, y, z]);
       setHash();
       getTile(tilebelt.tileToQuadkey([x, y, z]));
@@ -210,36 +245,65 @@ addEventListener("keydown", (ev) => {
   }
 });
 
-canvas.addEventListener("pointermove", function(ev) {
+canvas.addEventListener("pointermove", function (ev) {
   const { width, height } = this.getBoundingClientRect();
-  let xq = 0 <= ev.offsetX ? ev.offsetX <= width / 2 ? 0 : ev.offsetX <= width ? 1 : null : null;
-  let yq = 0 <= ev.offsetY ? ev.offsetY <= height / 2 ? 0 : ev.offsetY <= height ? 1 : null : null;
-  const pointq = (xq === null || yq === null) ? null : [["y", "u"], ["b", "n"]][yq][xq];
+  let xq =
+    0 <= ev.offsetX
+      ? ev.offsetX <= width / 2
+        ? 0
+        : ev.offsetX <= width
+          ? 1
+          : null
+      : null;
+  let yq =
+    0 <= ev.offsetY
+      ? ev.offsetY <= height / 2
+        ? 0
+        : ev.offsetY <= height
+          ? 1
+          : null
+      : null;
+  const pointq =
+    xq === null || yq === null
+      ? null
+      : [
+          ["y", "u"],
+          ["b", "n"],
+        ][yq][xq];
   this.dispatchEvent(new GestureEvent("quadmove", { pointq }));
 });
 
 class GestureEvent extends Event {
-  constructor(type, { pointq, ...options} = {}) {
+  constructor(type, { pointq, ...options } = {}) {
     super(type, options);
     this.pointq = pointq;
   }
 }
 
-canvas.addEventListener("quadmove", function(ev) {
+canvas.addEventListener("quadmove", function (ev) {
   console.log(ev.pointq);
 });
 
 if (!sessionStorage.getItem("hello")) {
   sessionStorage.setItem("hello", true);
   const button = html`<button autofocus>ok</button>`;
-  const dialog = html`<dialog ${{
-    onfocus(e) { button.focus(); },
-    onkeydown(e) { e.stopPropagation(); },
-    onclose() { this.remove(); },
-  }}>
+  const dialog = html`<dialog
+    ${{
+      onfocus(e) {
+        button.focus();
+      },
+      onkeydown(e) {
+        e.stopPropagation();
+      },
+      onclose() {
+        this.remove();
+      },
+    }}
+  >
     navigate with
     <kbd>y</kbd> <kbd>u</kbd> <kbd>b</kbd> <kbd>n</kbd> <kbd>&lt;</kbd>
-    <form method="dialog">${button}</form>`;
+    <form method="dialog">${button}</form>
+  </dialog>`;
   document.body.append(dialog);
   dialog.showModal();
 }
