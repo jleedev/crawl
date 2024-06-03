@@ -1,8 +1,10 @@
-import { html } from "./htl.js";
+import { html } from "htl";
+import tilebelt from "@mapbox/tilebelt";
+
 import { renderInWorker } from "./render.js";
 import { Tile } from "./mvt/tile.js";
 import { ZoomController } from "./zoom.js";
-import * as zxy from "./zxy.js";
+import * as hilbert from "./hilbert.js";
 import { css, dataSize } from "./util.js";
 import { TileSource } from "./tile_source.js";
 
@@ -93,7 +95,7 @@ const editLayers = () => {
 };
 
 const doLoadTile = async (quadKey) => {
-  const [z, x, y] = zxy.fromQuadKey(quadKey);
+  const [x, y, z] = tilebelt.quadkeyToTile(quadKey);
   const tiledata = await source.fetchTile(z, x, y);
   let tile;
   {
@@ -112,9 +114,9 @@ const getTile = async (quadKey) => {
 };
 
 const redraw = async () => {
-  const current = zxy.toQuadKey(z, x, y);
+  const current = tilebelt.tileToQuadkey([x, y, z]);
   const tile = await getTile(current);
-  if (current !== zxy.toQuadKey(z, x, y)) return;
+  if (current !== tilebelt.tileToQuadkey([x, y, z])) return;
   const cx = canvas.getContext("2d");
   cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
   cx.drawImage(tile.imageBitmap, 0, 0);
@@ -122,7 +124,7 @@ const redraw = async () => {
   if (debug) {
     debugMessage.textContent = [
       `quadkey ${current}`,
-      `hilbert ${zxy.toTileID(z, x, y)}`,
+      `hilbert ${hilbert.zxyToTileId(z, x, y)}`,
       `${z}/${x}/${y}`,
       `${+tile.duration.toFixed(1)} ms`,
       dataSize(tile.byteLength),
@@ -143,7 +145,7 @@ const parseHash = () => {
 
 addEventListener("hashchange", (e) => {
   const [newZ, newX, newY] = parseHash();
-  if (zxy.toQuadKey(newZ, newX, newY) === zxy.toQuadKey(z, x, y)) return;
+  if (tilebelt.tileToQuadkey(newX, newY, newZ) === tilebelt.tileToQuadkey(x, y, z)) return;
   [z, x, y] = [newZ, newX, newY];
   redraw();
 });
@@ -184,19 +186,21 @@ addEventListener("keydown", (ev) => {
     case "b": {
       if (zoomController.isZooming()) break;
       if (z >= source.maxzoom) break;
-      [z, x, y] = zxy.getChildren([z, x, y])[ev.key];
+      // console.log(z,x,y,'->');
+      [x, y, z] = (([y, u, n, b]) => ({ y, u, n, b })[ev.key])(tilebelt.getChildren([x, y, z]));
+      // console.log('->',z,x,y);
       setHash();
-      getTile(zxy.toQuadKey(z, x, y));
+      getTile(tilebelt.tileToQuadkey([x, y, z]));
       zoomController.animate(boxQuad(ev.key), boxFull()).then(redraw);
       break;
     }
     case "<":
       if (zoomController.isZooming()) break;
       if (z <= source.minzoom) break;
-      const quad = zxy.zoomOut([z, x, y]);
-      [z, x, y] = zxy.getParent([z, x, y]);
+      const quad = [['y', 'u'], ['b', 'n']][y & 1][x & 1];
+      [x, y, z] = tilebelt.getParent([x, y, z]);
       setHash();
-      getTile(zxy.toQuadKey(z, x, y));
+      getTile(tilebelt.tileToQuadkey([x, y, z]));
       zoomController.animate(boxFull(), boxQuad(quad)).then(redraw);
       break;
     case "l":

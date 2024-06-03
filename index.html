@@ -3,6 +3,14 @@
 <meta charset="utf-8">
 <meta name="color-scheme" content="light dark">
 <meta name="viewport" content="width=device-width,user-scalable=no,minimum-scale=1,maximum-scale=1">
+<script type="importmap">
+  {
+    "imports": {
+      "htl": "./htl.mjs",
+      "@mapbox/tilebelt": "./tilebelt.mjs"
+    }
+  }
+</script>
 <div id="container"></div>
 <script>
   debug = true;
@@ -12,6 +20,6 @@
 </script>
 <script type="module" src="./main.js"></script>
 <script type="module">
-  import { html } from "./htl.js";
+  import { html } from "htl";
   Object.assign(globalThis, { html });
 </script>
