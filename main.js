@@ -35,7 +35,7 @@ document.adoptedStyleSheets.push(css`
 addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
 
 const source = await TileSource.fromTileJSON(
-  "https://d1zqyi8v6vm8p9.cloudfront.net/planet.json",
+  "https://tile.ourmap.us/data/v3.json",
 );
 
 const canvas = /** @type HTMLCanvasElement */ (
