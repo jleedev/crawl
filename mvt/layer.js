@@ -30,7 +30,7 @@ export class Layer extends ProtoBuf {
     version = 1;
     extent = 4096;
     [15](version) {
-      this.version = version;
+      this.version = Number(version);
     }
     [1](name) {
       this.name = decodeString(name);

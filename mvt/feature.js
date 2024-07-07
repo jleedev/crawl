@@ -15,7 +15,7 @@ export const GeomType = Object.freeze({
 });
 
 function buildProperties(kvs) {
-  return Object.create(null, Object.fromEntries(kvs.map(([key, value]) => [key, { value, writable: true, enumerable: true, configurable: true }])));
+  return Object.create(null, Object.fromEntries(kvs.map(([key, value]) => [key, { value: typeof value === 'bigint' ? Number(value) : value, writable: true, enumerable: true, configurable: true }])));
 }
 
 export class Feature extends ProtoBuf {
@@ -97,7 +97,7 @@ export class Feature extends ProtoBuf {
     _geometry = [];
     _tags = [];
     [1](id) {
-      this.id = id;
+      this.id = Number(id);
     }
     [2](tags) {
       this._tags.push(...parsePackedVarint(tags));
