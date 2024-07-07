@@ -3,6 +3,7 @@ import { path as geoPath } from "./path.js";
 import { cyrb53a } from "./util.js";
 
 onerror = close;
+self.addEventListener('error', () => {debugger;});
 
 self.addEventListener("message", (event) => handler(event.data));
 

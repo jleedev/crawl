@@ -30,7 +30,13 @@ export const windows = function () {
   );
 };
 
-export const zigzagDecode = (n) => (n >> 1) ^ -(n & 1);
+export const zigzagDecode = (n) => {
+  if (typeof n === "bigint") {
+    return (n >> 1n) ^ -(n & 1n);
+  } else {
+    return (n >> 1) ^ -(n & 1);
+  }
+};
 
 export const cyrb53a = function (str, seed = 0) {
   let h1 = 0xdeadbeef ^ seed,

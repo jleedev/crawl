@@ -45,7 +45,7 @@ export class Layer extends ProtoBuf {
       this.values.push(Value.parseFrom(values).value);
     }
     [5](extent) {
-      this.extent = extent;
+      this.extent = Number(extent);
     }
   };
 }

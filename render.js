@@ -1,11 +1,14 @@
 const workerPool = new Set();
 
+let workerUrl = import.meta.resolve("./render_worker.js");
+export { workerUrl };
+
 const getWorker = () => {
   if (workerPool.size) {
     let [result] = workerPool.keys();
     return result;
   }
-  const worker = new Worker(import.meta.resolve("./render_worker.js"), { type: "module" });
+  const worker = new Worker(new URL(workerUrl), { type: "module" });
   workerPool.add(worker);
   worker.addEventListener("error", () => workerPool.delete(worker));
   return worker;

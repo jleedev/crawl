@@ -4,15 +4,15 @@ export const parseProto = function* (buf) {
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let i = 0;
   const varint = () => {
-    let val = 0,
-      shift = 0,
+    let val = 0n,
+      shift = 0n,
       b;
     do {
       must(1);
-      b = buf[i++];
-      val |= (b & 0x7f) << shift;
-      shift += 7;
-    } while (b & 0x80);
+      b = BigInt(buf[i++]);
+      val |= (b & 0x7fn) << shift;
+      shift += 7n;
+    } while (b & 0x80n);
     return val;
   };
   const must = (n) => {
@@ -39,23 +39,23 @@ export const parseProto = function* (buf) {
   };
   while (i < buf.length) {
     const tag = varint();
-    const field = tag >> 3;
+    const field = tag >> 3n;
     let value;
-    switch (tag & 0x7) {
-      case 0: // VARINT
+    switch (tag & 0x7n) {
+      case 0n: // VARINT
         value = varint();
         break;
-      case 1: // I64
+      case 1n: // I64
         value = read8();
         break;
-      case 2: // LEN
-        value = read(varint());
+      case 2n: // LEN
+        value = read(Number(varint()));
         break;
-      case 5: // I32
+      case 5n: // I32
         value = read4();
         break;
       default:
-        throw new ValueError(tag & 0x7);
+        throw new ValueError(tag & 0x7n);
     }
     yield { field, value };
   }
