@@ -5,7 +5,7 @@ const getWorker = () => {
     let [result] = workerPool.keys();
     return result;
   }
-  const worker = new Worker("./render_worker.js", { type: "module" });
+  const worker = new Worker(import.meta.resolve("./render_worker.js"), { type: "module" });
   workerPool.add(worker);
   worker.addEventListener("error", () => workerPool.delete(worker));
   return worker;
