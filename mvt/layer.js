@@ -70,7 +70,7 @@ export class Value extends ProtoBuf {
       this.value = decodeString(string_value);
     }
     [2](float_value) {
-      const { buffer } = Uint32Array.of(float_value)
+      const { buffer } = Uint32Array.of(float_value);
       [this.value] = new Float32Array(buffer);
     }
     [3](double_value) {
