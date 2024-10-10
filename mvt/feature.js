@@ -110,3 +110,5 @@ export class Feature extends ProtoBuf {
     }
   };
 }
+
+export default Feature;

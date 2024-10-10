@@ -2,6 +2,7 @@ export const path = () => {
   let cx;
   let pr = 4.5;
   const handler = {
+    __proto__: null,
     FeatureCollection(geom) {
       geom.features.forEach((feat) => this.Feature(feat));
     },

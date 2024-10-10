@@ -1,5 +1,5 @@
-import { ProtoBuf } from "./pb.js";
-import { Layer } from "./layer.js";
+import ProtoBuf from "./pb.js";
+import Layer from "./layer.js";
 
 export class Tile extends ProtoBuf {
   layers = { __proto__: null };
@@ -12,3 +12,5 @@ export class Tile extends ProtoBuf {
     }
   };
 }
+
+export default Tile;

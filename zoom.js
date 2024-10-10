@@ -1,4 +1,4 @@
-import { css } from "./util.js";
+import styles from "./zoom.css" with { type: "css" };
 
 export class ZoomController {
   constructor({ container, duration = 300, count = 3, step = 30 } = {}) {
@@ -41,16 +41,10 @@ export class ZoomController {
   _makeBox() {
     const box = document.createElement("div");
     const shadow = box.attachShadow({ mode: "open" });
-    shadow.adoptedStyleSheets.push(sheet);
+    shadow.adoptedStyleSheets.push(styles);
     this._scope.append(box);
     return box;
   }
 }
 
-const sheet = css`
-  :host {
-    position: absolute;
-    pointer-events: none;
-    outline: 1px solid;
-  }
-`;
+export default ZoomController;

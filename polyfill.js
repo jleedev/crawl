@@ -14,11 +14,11 @@ globalThis.Iterator ??= (() => {
   return Iterator;
 })();
 
-Iterator.from ??= function (x) {
+Iterator.from ??= function from(x) {
   return x[Symbol.iterator]();
 };
 
-Iterator.prototype.map ??= function* (callbackFn) {
+Iterator.prototype.map ??= function* map(callbackFn) {
   let index = 0;
   for (const element of this) {
     yield callbackFn(element, index);
@@ -26,7 +26,7 @@ Iterator.prototype.map ??= function* (callbackFn) {
   }
 };
 
-Iterator.prototype.flatMap ??= function* (callbackFn) {
+Iterator.prototype.flatMap ??= function* flatMap(callbackFn) {
   let index = 0;
   for (const element of this) {
     for (const value of callbackFn(element, index)) {
@@ -37,7 +37,7 @@ Iterator.prototype.flatMap ??= function* (callbackFn) {
   }
 };
 
-Iterator.prototype.reduce ??= function (callbackFn, initialValue) {
+Iterator.prototype.reduce ??= function reduce(callbackFn, initialValue) {
   let accumulator = initialValue,
     currentIndex = 0;
   if (arguments.length < 2) {
@@ -53,7 +53,7 @@ Iterator.prototype.reduce ??= function (callbackFn, initialValue) {
   return accumulator;
 };
 
-Iterator.prototype.take ??= function* (limit) {
+Iterator.prototype.take ??= function* take(limit) {
   if (limit < 0) throw new TypeError();
   if (!Number.isInteger(limit) && limit !== Infinity) throw new TypeError();
   if (limit === 0) return;
@@ -64,6 +64,18 @@ Iterator.prototype.take ??= function* (limit) {
   }
 };
 
-Iterator.prototype.toArray ??= function () {
+Iterator.prototype.toArray ??= function toArray() {
   return Array.from(this);
+};
+
+Blob.prototype.bytes ??= Request.prototype.bytes ??= Response.prototype.bytes ??= async function bytes(){
+  return new Uint8Array(await this.arrayBuffer());
+}
+
+Promise.withResolvers ??= function withResolvers() {
+  let resolve, reject, promise = new Promise((r, j) => {
+      resolve = r;
+      reject = j;
+  });
+  return { promise, resolve, reject };
 };

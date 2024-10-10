@@ -2,71 +2,35 @@ import { html } from "htl";
 import tilebelt from "@mapbox/tilebelt";
 
 import { renderInWorker } from "./render.js";
-import { Tile } from "./mvt/tile.js";
-import { ZoomController } from "./zoom.js";
+import Tile from "./mvt/tile.js";
+import ZoomController from "./zoom.js";
 import hilbert from "./hilbert.js";
-import { css, dataSize } from "./util.js";
-import { TileSource } from "./tile_source.js";
+import { dataSize } from "./util.js";
+import TileSource from "./tile_source.js";
 
-// Currently the canvas and the container have the same size
-document.adoptedStyleSheets.push(css`
-  :root {
-    height: 100%;
-    display: grid;
-    touch-action: none;
-  }
-  body {
-    margin: 0;
-    place-self: center;
-    color: ButtonText;
-    background: ButtonFace;
-  }
-  #container {
-    background: white;
-    position: relative;
-  }
-  canvas {
-    display: block;
-    max-width: 100vw;
-    max-height: 100vh;
-  }
-`);
+import styles from "./style.css" with { type: "css" };
+document.adoptedStyleSheets.push(styles);
+
+import debugMessageStyles from "./debugMessage.css" with { type: "css" };
+
+import tilejson from "https://tile.ourmap.us/data/v3.json" with { type: "json" };
+const source = new TileSource(tilejson);
 
 addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
 
-const source = await TileSource.fromTileJSON(
-  "https://tile.ourmap.us/data/v3.json",
-);
+function createCanvas(width, height) {
+  return /** @type HTMLCanvasElement */ (html`<canvas ${{width, height}}>`);
+}
 
-const canvas = /** @type HTMLCanvasElement */ (
-  html`<canvas width="512" height="512"></canvas>`
-);
+const container = document.getElementById("container");
+
+const canvas = createCanvas(512, 512);
 container.append(canvas);
 
 const debugMessage = ((ele = document.createElement("div")) => {
   const root = ele.attachShadow({ mode: "open" });
   root.append(document.createElement("slot"));
-  root.adoptedStyleSheets.push(css`
-    :host {
-      background: rgba(255 255 255 / 0.7);
-      color: black;
-      font-family: monospace;
-      margin: 4px;
-      position: absolute;
-      top: 0;
-      transition: all ease-in-out 300ms;
-      white-space: pre-wrap;
-    }
-    :host(:not(:empty)) {
-      border: 1px solid;
-    }
-    :host(:hover) {
-      background: rgba(255 255 255 / 1);
-      box-shadow:
-        1px 1px 1px black,
-        2px 2px 1px black;
-    }
-  `);
+  root.adoptedStyleSheets.push(debugMessageStyles);
   container.append(ele);
   return ele;
 })();
@@ -102,18 +66,14 @@ const editLayers = () => {
         html`<li class=${state ? "enabled" : "disabled"}>${id}</li>`,
     )}
   </ol>`;
-  const dialog = html`<dialog
-    ${{
-      onkeydown(e) {
-        e.stopPropagation();
-      },
-      onclose() {
-        this.remove();
-      },
-    }}
-  >
-    ${contents}
-  </dialog>`;
+  function onkeydown(e) {
+    e.stopPropagation();
+  };
+  function onclose() {
+    this.remove();
+  };
+  const dialog = html`<dialog ${{onkeydown, onclose}}>
+    ${contents}</dialog>`;
   document.body.append(dialog);
   dialog.showModal();
 };

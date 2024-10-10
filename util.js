@@ -1,6 +1,6 @@
 import "./polyfill.js";
 
-export const chunks = function () {
+export function chunks() {
   return Iterator.from(
     function* (it, n = 2) {
       if (!Number.isSafeInteger(n) || n <= 0) throw new TypeError(n);
@@ -12,12 +12,12 @@ export const chunks = function () {
       }
     }.apply(this, arguments),
   );
-};
+}
 
-export const windows = function () {
+export function windows() {
   return Iterator.from(
     function* (it, n = 2) {
-      if (!Number.isSafeInteger(n) || n <= 0) throw new TypeError(n);
+      if (!(n >>= 0)) throw new RangeError(n);
       it = Iterator.from(it);
       let a = it.take(n).toArray();
       if (a.length < n) return a;
@@ -28,17 +28,17 @@ export const windows = function () {
       }
     }.apply(this, arguments),
   );
-};
+}
 
-export const zigzagDecode = (n) => {
+export function zigzagDecode(n) {
   if (typeof n === "bigint") {
     return (n >> 1n) ^ -(n & 1n);
   } else {
     return (n >> 1) ^ -(n & 1);
   }
-};
+}
 
-export const cyrb53a = function (str, seed = 0) {
+export function cyrb53a(str, seed = 0) {
   let h1 = 0xdeadbeef ^ seed,
     h2 = 0x41c6ce57 ^ seed;
   for (let i = 0; i < str.length; i++) {
@@ -51,16 +51,9 @@ export const cyrb53a = function (str, seed = 0) {
   h1 ^= h2 >>> 16;
   h2 ^= h1 >>> 16;
   return 2097152 * (h2 >>> 0) + (h1 >>> 11);
-};
+}
 
-export const css = (...args) => {
-  const text = String.raw(...args);
-  const sheet = new CSSStyleSheet();
-  sheet.replaceSync(text);
-  return sheet;
-};
-
-export const dataSize = (b) => {
+export function dataSize(b) {
   const f = (k) => +(b / k).toFixed(3);
   if (b < 2 ** 10) return `${b} B`;
   if (b < 2 ** 20) return `${f(2 ** 10)} KiB`;

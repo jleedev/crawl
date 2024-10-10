@@ -1,5 +1,5 @@
-import { ProtoBuf } from "./pb.js";
-import { Feature } from "./feature.js";
+import ProtoBuf from "./pb.js";
+import Feature from "./feature.js";
 import { zigzagDecode } from "../util.js";
 
 export class Layer extends ProtoBuf {
@@ -49,6 +49,8 @@ export class Layer extends ProtoBuf {
     }
   };
 }
+
+export default Layer;
 
 const textDecoder = new TextDecoder();
 

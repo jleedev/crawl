@@ -1,9 +1,8 @@
 const workerPool = new Set();
 
-let workerUrl = import.meta.resolve("./render_worker.js");
-export { workerUrl };
+export let workerUrl = import.meta.resolve("./render_worker.js");
 
-const getWorker = () => {
+function getWorker() {
   if (workerPool.size) {
     let [result] = workerPool.keys();
     return result;
@@ -14,7 +13,7 @@ const getWorker = () => {
   return worker;
 };
 
-export const renderInWorker = async (tiledata, tileSize) => {
+export async function renderInWorker(tiledata, tileSize) {
   if (!(ArrayBuffer.isView(tiledata) && tiledata instanceof Uint8Array))
     throw new TypeError();
   const { port1, port2 } = new MessageChannel();
@@ -23,12 +22,12 @@ export const renderInWorker = async (tiledata, tileSize) => {
     { tiledata, tileSize, port: port2 },
     { transfer: [tiledata.buffer, port2] },
   );
-  const { data } = await new Promise((resolve, reject) => {
-    port1.addEventListener("message", resolve);
-    port1.addEventListener("messageerror", reject);
-    port1.addEventListener("close", reject);
-    worker.addEventListener("error", reject);
-    port1.start();
-  });
+  const { promise, resolve, reject } = Promise.withResolvers();
+  port1.addEventListener("message", resolve);
+  port1.addEventListener("messageerror", reject);
+  port1.addEventListener("close", reject);
+  worker.addEventListener("error", reject);
+  port1.start();
+  const { data } = await promise;
   return data;
 };

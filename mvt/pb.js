@@ -100,3 +100,5 @@ export class ProtoBuf {
     return builder.build();
   }
 }
+
+export default ProtoBuf;
