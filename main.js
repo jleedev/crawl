@@ -13,7 +13,7 @@ document.adoptedStyleSheets.push(styles);
 
 import debugMessageStyles from "./debugMessage.css" with { type: "css" };
 
-import tilejson from "https://tile.ourmap.us/data/v3.json" with { type: "json" };
+import tilejson from "https://tiles.openstreetmap.us/vector/openmaptiles.json" with { type: "json" };
 const source = new TileSource(tilejson);
 
 addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
